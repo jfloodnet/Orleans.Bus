@@ -32,9 +32,18 @@ namespace Orleans.Bus
         }
 
         [Test]
+        public void Synchronous_wait()
+        {
+            bus.Send("test", new DoFoo("sync")).Wait(); 
+            
+            var result = bus.Query<string>("test", new GetFoo()).Result;
+            Assert.AreEqual("sync-test", result);
+        }
+
+        [Test]
         public void Should_unwrap_exception()
         {
             Assert.Throws<ApplicationException>(async ()=> await bus.Send("test", new ThrowException()));
-        }  
+        }
     }
 }
