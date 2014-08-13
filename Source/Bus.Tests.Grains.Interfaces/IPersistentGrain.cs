@@ -44,9 +44,4 @@ namespace Orleans.Bus
         [Handler] Task HandleCommand(object cmd);
         [Handler] Task<object> AnswerQuery(object query);
     }
-
-    public interface IPersistentGrainState : IGrainState
-    {
-        int Total { get; set; }
-    }
 }

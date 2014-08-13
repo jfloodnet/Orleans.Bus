@@ -131,8 +131,7 @@ namespace Orleans.Bus
     /// <summary>
     /// Base class for all persistent message based grains
     /// </summary>
-    public abstract class MessageBasedGrain<TState> : GrainBase<TState>, IMessageBasedGrain, IExposeGrainInternals 
-        where TState : class, IGrainState
+    public abstract class MessageBasedGrain<TState> : GrainBase<IInternalGrainState<TState>>, IMessageBasedGrain, IExposeGrainInternals 
     {
         /// <summary>
         /// Reference to <see cref="IMessageBus"/>. Points to global runtime-bound implementation by default.
@@ -211,22 +210,31 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Strongly typed accessor for the grain state
+        /// Strongly typed accessor for the grain state 
         /// </summary>
-        /// <remarks>Could be substituted for unit-testing purposes</remarks>
-        public new TState State
+        public new IStateHolder<TState> State
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets current instance of Unit of Work for controlling state checkpointing
+        /// </summary>
+        /// <remarks>Could be substiuted for unit-testing purposes</remarks>
+        public IStateStorage Storage
         {
             get; set;
         }
 
         /// <summary>
         /// This method is called at the end of the process of activating a grain.
-        /// It is called before any messages have been dispatched to the grain.
-        /// For grains with declared persistent state, this method is called after the State property has been populated.
+        ///             It is called before any messages have been dispatched to the grain.
+        ///             For grains with declared persistent state, this method is called after the State property has been populated.
         /// </summary>
         public override Task ActivateAsync()
         {
-            State = base.State;
+            State = base.State.Holder;
+            Storage = new DefaultStateStorage(base.State);
             return TaskDone.Done;
         }
 

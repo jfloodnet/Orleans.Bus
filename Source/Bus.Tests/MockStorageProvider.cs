@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    public class MockStorageProvider : StorageProvider<IPersistentGrainState>
+    public class MockStorageProvider : StateStorageProvider<int>
     {
         public MockStorageProvider()
         {
@@ -104,27 +104,26 @@ namespace Orleans.Bus
             return TaskDone.Done;
         }
 
-        public override Task ReadStateAsync(string grainId, string grainType, IPersistentGrainState state)
+        public override Task<int> ReadStateAsync(string grainId, string grainType)
         {
             ReadStateGrainId = grainId;
             ReadStateGrainType = grainType;
-            state.Total = ReadStateReturnValue;
-            return TaskDone.Done;
+            return Task.FromResult(ReadStateReturnValue);
         }
 
-        public override Task WriteStateAsync(string grainId, string grainType, IPersistentGrainState grainState)
+        public override Task WriteStateAsync(string grainId, string grainType, int grainState)
         {
             WriteStateGrainId = grainId;
             WriteStateGrainType = grainType;
-            WriteStatePassedValue = grainState.Total;
+            WriteStatePassedValue = grainState;
             return TaskDone.Done;
         }
 
-        public override Task ClearStateAsync(string grainId, string grainType, IPersistentGrainState grainState)
+        public override Task ClearStateAsync(string grainId, string grainType, int grainState)
         {
             ClearStateGrainId = grainId;
             ClearStateGrainType = grainType;
-            ClearStatePassedValue = grainState.Total;
+            ClearStatePassedValue = grainState;
             return TaskDone.Done;
         }
     }

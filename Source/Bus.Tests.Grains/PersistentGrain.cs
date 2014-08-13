@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Orleans.Bus
 {
     [StorageProvider(ProviderName = "PersistentGrainStorageProvider")]
-    public class PersistentGrain : MessageBasedGrain<IPersistentGrainState>, IPersistentGrain
+    public class PersistentGrain : MessageBasedGrain<int>, IPersistentGrain
     {
         Task IPersistentGrain.HandleCommand(object cmd)
         {
@@ -19,19 +19,19 @@ namespace Orleans.Bus
 
         public Task Handle(SetValue cmd)
         {
-            State.Total = cmd.Value;
-            return State.WriteStateAsync();
+            State.Value = cmd.Value;
+            return Storage.WriteStateAsync();
         }
 
         public async Task Handle(ClearValue cmd)
         {
-            await State.ClearStateAsync();
-            State.Total = -1;
+            await Storage.ClearStateAsync();
+            State.Value = -1;
         }
 
         public Task<int> Answer(GetValue query)
         {
-            return Task.FromResult(State.Total);
+            return Task.FromResult(State.Value);
         }
     }
 }
