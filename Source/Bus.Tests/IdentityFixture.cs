@@ -11,7 +11,7 @@ namespace Orleans.Bus
         [Test]
         public void Id_from_reference()
         {
-            var grain = TestGrainFactory.GetGrain(0, "test");
+            var grain = TestPocoGrainFactory.GetGrain(0, "test");
             var reference = grain.AsReference();
             Assert.AreEqual("test", Identity.Of(reference));
         } 

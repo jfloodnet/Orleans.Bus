@@ -29,13 +29,13 @@ namespace Orleans.Bus
                 Is.EqualTo("p1"));
 
             Assert.That(MockStorageProvider.ReadStateGrainType,
-                Is.EqualTo("Orleans.Bus.PersistentGrain"));
+                Is.EqualTo("Orleans.Bus.TestPersistentGrain"));
         }
 
         [Test]
         public async void Write_state()
         {
-            await bus.Send("p2", new SetValue(2));
+            await bus.Send("p2", new ChangeValue(2));
             
             var result = await bus.Query<int>("p2", new GetValue());
             Assert.That(result, Is.EqualTo(2));
@@ -47,13 +47,13 @@ namespace Orleans.Bus
                 Is.EqualTo("p2"));
 
             Assert.That(MockStorageProvider.WriteStateGrainType,
-                Is.EqualTo("Orleans.Bus.PersistentGrain"));
+                Is.EqualTo("Orleans.Bus.TestPersistentGrain"));
         }
 
         [Test]
         public async void Clear_state()
         {
-            await bus.Send("p3", new SetValue(3));
+            await bus.Send("p3", new ChangeValue(3));
             await bus.Send("p3", new ClearValue());
 
             var result = await bus.Query<int>("p3", new GetValue());
@@ -66,7 +66,7 @@ namespace Orleans.Bus
                 Is.EqualTo("p3"));
 
             Assert.That(MockStorageProvider.ClearStateGrainType,
-                Is.EqualTo("Orleans.Bus.PersistentGrain"));
+                Is.EqualTo("Orleans.Bus.TestPersistentGrain"));
         } 
     }
 }

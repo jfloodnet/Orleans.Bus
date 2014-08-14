@@ -131,7 +131,7 @@ namespace Orleans.Bus
     /// <summary>
     /// Base class for all persistent message based grains
     /// </summary>
-    public abstract class MessageBasedGrain<TState> : GrainBase<IInternalGrainState<TState>>, IMessageBasedGrain, IExposeGrainInternals 
+    public abstract class MessageBasedGrain<TState> : GrainBase<IStateHolder<TState>>, IMessageBasedGrain, IExposeGrainInternals 
     {
         /// <summary>
         /// Reference to <see cref="IMessageBus"/>. Points to global runtime-bound implementation by default.
@@ -212,7 +212,17 @@ namespace Orleans.Bus
         /// <summary>
         /// Strongly typed accessor for the grain state 
         /// </summary>
-        public new IStateHolder<TState> State
+        public new TState State
+        {
+            get { return Holder.State; }
+            set { Holder.State = value; }
+        }
+
+        /// <summary>
+        /// Gets or set state holder. By default it's initialized to the one created by Orleans runtime.
+        /// Could be substituted for unit testing purposes.
+        /// </summary>
+        public IStateHolder<TState> Holder
         {
             get; set;
         }
@@ -228,12 +238,12 @@ namespace Orleans.Bus
 
         /// <summary>
         /// This method is called at the end of the process of activating a grain.
-        ///             It is called before any messages have been dispatched to the grain.
-        ///             For grains with declared persistent state, this method is called after the State property has been populated.
+        /// It is called before any messages have been dispatched to the grain.
+        /// For grains with declared persistent state, this method is called after the State property has been populated.
         /// </summary>
         public override Task ActivateAsync()
         {
-            State = base.State.Holder;
+            Holder = base.State;
             Storage = new DefaultStateStorage(base.State);
             return TaskDone.Done;
         }

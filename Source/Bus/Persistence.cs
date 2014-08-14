@@ -9,45 +9,15 @@ using Orleans.Storage;
 namespace Orleans.Bus
 {
     /// <summary>
-    /// For internal purposes only
+    /// Generic grain state holder. 
+    /// Removes necessity to create specific state interfaces in grain interface project.
     /// </summary>
-    public interface IInternalGrainState<T> : IGrainState
+    public interface IStateHolder<T> : IGrainState
     {
         /// <summary>
-        /// For internal purposes only
+        /// Actual grain state
         /// </summary>
-        IStateHolder<T> Holder
-        {
-            get; set;
-        }
-    }
-
-    /// <summary>
-    /// Holds actual grain's state (generic version)
-    /// </summary>
-    public interface IStateHolder<T>
-    {
-        /// <summary>
-        /// Actual grain's state
-        /// </summary>
-        T Value
-        {
-            get; set;
-        }
-    }
-
-    /// <summary>
-    /// Holds actual grain's state
-    /// </summary>
-    public sealed class StateHolder<T> : IStateHolder<T>
-    {
-        internal StateHolder()
-        {}
-
-        /// <summary>
-        /// Actual grain's state
-        /// </summary>
-        public T Value
+        T State
         {
             get; set;
         }
@@ -120,49 +90,27 @@ namespace Orleans.Bus
 
         async Task IStorageProvider.ReadStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
         {
-            SetValue(grainState, await ReadStateAsync(grainReference.Id(), grainType));
+            SetState(grainState, await ReadStateAsync(grainReference.Id(), new GrainType(grainType)));
         }
 
         Task IStorageProvider.WriteStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
         {
-            return WriteStateAsync(grainReference.Id(), grainType, GetValue(grainState));
+            return WriteStateAsync(grainReference.Id(), new GrainType(grainType), GetState(grainState));
         }
 
         Task IStorageProvider.ClearStateAsync(string grainType, GrainReference grainReference, GrainState grainState)
         {
-            return ClearStateAsync(grainReference.Id(), grainType, GetValue(grainState));
+            return ClearStateAsync(grainReference.Id(), new GrainType(grainType), GetState(grainState));
         }
 
-        static TState GetValue(IGrainState state)
+        static TState GetState(IGrainState holder)
         {
-            var holder = GetHolder(state);
-
-            return holder != null 
-                    ? holder.Value 
-                    : default(TState);
+            return ((IStateHolder<TState>)holder).State;
         }
 
-        static void SetValue(IGrainState state, TState value)
+        static void SetState(IGrainState holder, TState state)
         {
-            var holder = GetHolder(state);
-
-            if (holder == null)
-            {
-                holder = new StateHolder<TState>();
-                SetHolder(state, holder);
-            }
-
-            holder.Value = value;
-        }
-
-        static IStateHolder<TState> GetHolder(IGrainState state)
-        {
-            return ((IInternalGrainState<TState>) state).Holder;
-        }
-
-        static void SetHolder(IGrainState state, IStateHolder<TState> holder)
-        {
-            ((IInternalGrainState<TState>)state).Holder = holder;
+            ((IStateHolder<TState>)holder).State = state;
         }
 
         /// <summary>
@@ -174,7 +122,7 @@ namespace Orleans.Bus
         /// <seealso cref="T:Orleans.OrleansLogger"/>
         public OrleansLogger Log
         {
-            get; set;
+            get; private set;
         }
 
         /// <summary>
@@ -200,33 +148,67 @@ namespace Orleans.Bus
         /// <summary>
         /// Returns grain's state stored in backing store.
         /// </summary>
-        /// <param name="grainId">Id of the grain.</param>
-        /// <param name="grainType">Type of the grain [fully qualified class name]</param>
+        /// <param name="id">Id of the grain.</param>
+        /// <param name="type">Type of the grain [fully qualified class name]</param>
         /// <returns>
         /// Completion promise which return state for the specified grain.
         /// </returns>
-        public abstract Task<TState> ReadStateAsync(string grainId, string grainType);
+        public abstract Task<TState> ReadStateAsync(string id, GrainType type);
 
         /// <summary>
         /// Writes grain's state to backing store
         /// </summary>
-        /// <param name="grainId">Id of the grain.</param>
-        /// <param name="grainType">Type of the grain [fully qualified class name]</param>
-        /// <param name="grainState">Grain state to be written.</param>
+        /// <param name="id">Id of the grain.</param>
+        /// <param name="type">Type of the grain [fully qualified class name]</param>
+        /// <param name="state">Grain state to be written.</param>
         /// <returns>
         /// Completion promise for the Write operation on the specified grain.
         /// </returns>
-        public abstract Task WriteStateAsync(string grainId, string grainType, TState grainState);
+        public abstract Task WriteStateAsync(string id, GrainType type, TState state);
 
         /// <summary>
         /// Deletes / Clears grain's state in a backing store.
         /// </summary>
-        /// <param name="grainId">Id of the grain.</param>
-        /// <param name="grainType">Type of the grain [fully qualified class name]</param>
-        /// <param name="grainState">Latest grain's state at the moment when Clear was called.</param>
+        /// <param name="id">Id of the grain.</param>
+        /// <param name="type">Type of the grain [fully qualified class name]</param>
+        /// <param name="state">Latest grain's state at the moment when Clear was called.</param>
         /// <returns>
         /// Completion promise for the Clear operation on the specified grain.
         /// </returns>
-        public abstract Task ClearStateAsync(string grainId, string grainType, TState grainState);
+        public abstract Task ClearStateAsync(string id, GrainType type, TState state);
+    }
+
+    /// <summary>
+    /// Provides information about grain type
+    /// </summary>
+    public struct GrainType
+    {
+        /// <summary>
+        /// Represents unknown grain type
+        /// </summary>
+        public static readonly GrainType Unknown = default(GrainType);
+        
+        /// <summary>
+        /// Grain's namespace
+        /// </summary>
+        public readonly string Namespace;
+
+        /// <summary>
+        /// Grain's name
+        /// </summary>
+        public readonly string Name;
+
+        /// <summary>
+        /// Grain's full name inluding namespace
+        /// </summary>
+        public readonly string FullName;
+
+        internal GrainType(string typeCode)
+        {
+            var separator = typeCode.LastIndexOf('.');
+            Namespace = typeCode.Substring(0, separator);
+            Name = typeCode.Substring(separator + 1);
+            FullName = typeCode;
+        }
     }
 }

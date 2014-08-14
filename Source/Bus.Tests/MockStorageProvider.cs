@@ -104,25 +104,25 @@ namespace Orleans.Bus
             return TaskDone.Done;
         }
 
-        public override Task<int> ReadStateAsync(string grainId, string grainType)
+        public override Task<int> ReadStateAsync(string grainId, GrainType grainType)
         {
             ReadStateGrainId = grainId;
-            ReadStateGrainType = grainType;
+            ReadStateGrainType = grainType.FullName;
             return Task.FromResult(ReadStateReturnValue);
         }
 
-        public override Task WriteStateAsync(string grainId, string grainType, int grainState)
+        public override Task WriteStateAsync(string grainId, GrainType grainType, int grainState)
         {
             WriteStateGrainId = grainId;
-            WriteStateGrainType = grainType;
+            WriteStateGrainType = grainType.FullName;
             WriteStatePassedValue = grainState;
             return TaskDone.Done;
         }
 
-        public override Task ClearStateAsync(string grainId, string grainType, int grainState)
+        public override Task ClearStateAsync(string grainId, GrainType grainType, int grainState)
         {
             ClearStateGrainId = grainId;
-            ClearStateGrainType = grainType;
+            ClearStateGrainType = grainType.FullName;
             ClearStatePassedValue = grainState;
             return TaskDone.Done;
         }
