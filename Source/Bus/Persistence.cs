@@ -4,8 +4,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Orleans.Providers;
 using Orleans.Storage;
+using Orleans.Providers;
 
 namespace Orleans.Bus
 {
@@ -25,24 +25,14 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Generic grain state holder for state-passed-as-argument storage provider. 
+    /// Holds temporary state passed as argument or returned to\from storage provider. 
     /// </summary>
-    public interface IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IGrainState
+    public class StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>
     {
-        /// <summary>
-        /// Says whether automatic request from Orleans infrastructure was made.
-        /// Used to check whether call to ReadStateAsync should be ignored.
-        /// For internal purposes only.
-        /// </summary>
-        bool Initialized
-        {
-            get; set;
-        }
-
         /// <summary>
         /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result
         /// </summary>
-        TReadStateResult ReadStateResult
+        public TReadStateResult ReadStateResult
         {
             get; set;
         }
@@ -50,7 +40,7 @@ namespace Orleans.Bus
         /// <summary>
         /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument
         /// </summary>
-        TWriteStateArgument WriteStateArgument
+        public TWriteStateArgument WriteStateArgument
         {
             get; set;
         }
@@ -58,7 +48,7 @@ namespace Orleans.Bus
         /// <summary>
         /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument
         /// </summary>
-        TClearStateArgument ClearStateArgument
+        public TClearStateArgument ClearStateArgument
         {
             get; set;
         }
@@ -138,37 +128,37 @@ namespace Orleans.Bus
 
     internal class DefaultStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument>
     {
-        readonly IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument> state;
+        readonly IStateHolder<StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>> holder;
 
-        public DefaultStateStorage(IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument> state)
+        public DefaultStateStorage(IStateHolder<StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>> holder)
         {
-            this.state = state;
+            this.holder = holder;
         }
 
         public async Task<TReadStateResult> ReadStateAsync()
         {
-            await state.ReadStateAsync();
+            await holder.ReadStateAsync();
             
-            var result = state.ReadStateResult;
-            state.ReadStateResult = default(TReadStateResult);
+            var result = holder.State.ReadStateResult;
+            holder.State.ReadStateResult = default(TReadStateResult);
 
             return result;
         }
 
         public async Task WriteStateAsync(TWriteStateArgument arg)
         {
-            state.WriteStateArgument = arg;
-            await state.WriteStateAsync();
+            holder.State.WriteStateArgument = arg;
+            await holder.WriteStateAsync();
 
-            state.WriteStateArgument = default(TWriteStateArgument);
+            holder.State.WriteStateArgument = default(TWriteStateArgument);
         }
 
         public async Task ClearStateAsync(TClearStateArgument arg)
         {
-            state.ClearStateArgument = arg;
-            await state.ClearStateAsync();
+            holder.State.ClearStateArgument = arg;
+            await holder.ClearStateAsync();
 
-            state.ClearStateArgument = default(TClearStateArgument);
+            holder.State.ClearStateArgument = default(TClearStateArgument);
         }
     }
 
@@ -302,9 +292,9 @@ namespace Orleans.Bus
         {
             var holder = Holder(grainState);
 
-            if (!holder.Initialized)
+            if (holder.State == null)
             {
-                holder.Initialized = true;
+                holder.State = new ;
                 return;
             }
 
@@ -332,9 +322,9 @@ namespace Orleans.Bus
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument> Holder(IGrainState holder)
+        static IStateHolder<> Holder(IGrainState holder)
         {
-            return ((IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument>)holder);
+            return ((IStateHolder<>)holder);
         }
 
         /// <summary>

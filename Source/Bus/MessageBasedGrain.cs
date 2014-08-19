@@ -361,7 +361,7 @@ namespace Orleans.Bus
     /// <typeparam name="TWriteStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument.</typeparam>
     /// <typeparam name="TClearStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument.</typeparam>
     public abstract class MessageBasedGrain<TReadStateResult, TWriteStateArgument, TClearStateArgument> 
-       : MessageBasedGrainBase<IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument>>
+       : MessageBasedGrainBase<IStateHolder<>>
     {
         /// <summary>
         /// Default constructor, which initialize all local services to runtime-bound implementations by default.
