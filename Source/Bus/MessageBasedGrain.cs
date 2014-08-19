@@ -131,10 +131,12 @@ namespace Orleans.Bus
     /// <summary>
     /// Base class for all persistent message based grains
     /// </summary>
-    public abstract class MessageBasedGrain<TState> : GrainBase<IStateHolder<TState>>, IMessageBasedGrain, IExposeGrainInternals 
+    /// <typeparam name="TState">The type of the state.</typeparam>
+    public abstract class MessageBasedGrainBase<TState> : GrainBase<TState>, IMessageBasedGrain, IExposeGrainInternals 
+        where TState : class, IGrainState
     {
         /// <summary>
-        /// Reference to <see cref="IMessageBus"/>. Points to global runtime-bound implementation by default.
+        /// Reference to <see cref="IMessageBus" />. Points to global runtime-bound implementation by default.
         /// </summary>
         public IMessageBus Bus;
 
@@ -166,7 +168,7 @@ namespace Orleans.Bus
         /// <summary>
         /// Default constructor, which initialize all local services to runtime-bound implementations by default.
         /// </summary>
-        protected MessageBasedGrain()
+        protected MessageBasedGrainBase()
         {
             Bus = MessageBus.Instance;
             Id = () => Identity.Of(this);
@@ -181,7 +183,10 @@ namespace Orleans.Bus
         /// </summary>
         /// <param name="o">The observer proxy.</param>
         /// <param name="e">The type of event</param>
-        /// <remarks>The operation is idempotent</remarks>
+        /// <returns></returns>
+        /// <remarks>
+        /// The operation is idempotent
+        /// </remarks>
         public virtual Task Attach(IObserve o, Type e)
         {
             Observers.Attach(o, e);
@@ -193,7 +198,10 @@ namespace Orleans.Bus
         /// </summary>
         /// <param name="o">The observer proxy.</param>
         /// <param name="e">The type of event</param>
-        /// <remarks>The operation is idempotent</remarks>
+        /// <returns></returns>
+        /// <remarks>
+        /// The operation is idempotent
+        /// </remarks>
         public virtual Task Detach(IObserve o, Type e)
         {
             Observers.Detach(o, e);
@@ -203,6 +211,7 @@ namespace Orleans.Bus
         /// <summary>
         /// Notifies all attached observers about given event.
         /// </summary>
+        /// <typeparam name="TEvent">The type of the event.</typeparam>
         /// <param name="e">An event</param>
         protected void Notify<TEvent>(TEvent e)
         {
@@ -210,8 +219,89 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Strongly typed accessor for the grain state 
+        /// Deactivates the on idle.
         /// </summary>
+        void IExposeGrainInternals.DeactivateOnIdle()
+        {
+            DeactivateOnIdle();
+        }
+
+        /// <summary>
+        /// Delays the deactivation.
+        /// </summary>
+        /// <param name="timeSpan">The time span.</param>
+        void IExposeGrainInternals.DelayDeactivation(TimeSpan timeSpan)
+        {
+            DelayDeactivation(timeSpan);
+        }
+
+        /// <summary>
+        /// Gets the reminder.
+        /// </summary>
+        /// <param name="reminderName">Name of the reminder.</param>
+        /// <returns></returns>
+        Task<IOrleansReminder> IExposeGrainInternals.GetReminder(string reminderName)
+        {
+            return GetReminder(reminderName);
+        }
+
+        /// <summary>
+        /// Gets the reminders.
+        /// </summary>
+        /// <returns></returns>
+        Task<List<IOrleansReminder>> IExposeGrainInternals.GetReminders()
+        {
+            return GetReminders();
+        }
+
+        /// <summary>
+        /// Registers the or update reminder.
+        /// </summary>
+        /// <param name="reminderName">Name of the reminder.</param>
+        /// <param name="dueTime">The due time.</param>
+        /// <param name="period">The period.</param>
+        /// <returns></returns>
+        Task<IOrleansReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
+        {
+            return RegisterOrUpdateReminder(reminderName, dueTime, period);
+        }
+
+        /// <summary>
+        /// Unregisters the reminder.
+        /// </summary>
+        /// <param name="reminder">The reminder.</param>
+        /// <returns></returns>
+        Task IExposeGrainInternals.UnregisterReminder(IOrleansReminder reminder)
+        {
+            return UnregisterReminder(reminder);
+        }
+
+        /// <summary>
+        /// Registers the timer.
+        /// </summary>
+        /// <param name="asyncCallback">The asynchronous callback.</param>
+        /// <param name="state">The state.</param>
+        /// <param name="dueTime">The due time.</param>
+        /// <param name="period">The period.</param>
+        /// <returns></returns>
+        IOrleansTimer IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
+        {
+            return RegisterTimer(asyncCallback, state, dueTime, period);
+        }
+    }
+
+    /// <summary>
+    /// Base class for persistent message-based grains with mono state and parameterless storage operations
+    /// </summary>
+    /// <typeparam name="TState">The type of the state.</typeparam>
+    public abstract class MessageBasedGrain<TState> : MessageBasedGrainBase<IStateHolder<TState>>
+    {
+        /// <summary>
+        /// Strongly typed accessor for the grain state
+        /// </summary>
+        /// <value>
+        /// The state.
+        /// </value>
         public new TState State
         {
             get { return Holder.State; }
@@ -220,8 +310,13 @@ namespace Orleans.Bus
 
         /// <summary>
         /// Gets or set state holder. By default it's initialized to the one created by Orleans runtime.
-        /// Could be substituted for unit testing purposes.
         /// </summary>
+        /// <value>
+        /// The holder.
+        /// </value>
+        /// <remarks>
+        /// Could be substiuted for unit-testing purposes
+        /// </remarks>
         public IStateHolder<TState> Holder
         {
             get; set;
@@ -230,7 +325,12 @@ namespace Orleans.Bus
         /// <summary>
         /// Gets or sets current instance of Unit of Work for controlling state checkpointing
         /// </summary>
-        /// <remarks>Could be substiuted for unit-testing purposes</remarks>
+        /// <value>
+        /// The storage.
+        /// </value>
+        /// <remarks>
+        /// Could be substiuted for unit-testing purposes
+        /// </remarks>
         public IStateStorage Storage
         {
             get; set;
@@ -241,46 +341,69 @@ namespace Orleans.Bus
         /// It is called before any messages have been dispatched to the grain.
         /// For grains with declared persistent state, this method is called after the State property has been populated.
         /// </summary>
+        /// <returns></returns>
         public override Task ActivateAsync()
         {
             Holder = base.State;
             Storage = new DefaultStateStorage(base.State);
             return TaskDone.Done;
         }
-
-        void IExposeGrainInternals.DeactivateOnIdle()
+    }   
+    
+    /// <summary>
+    /// Base class for persistent message-based grains with imperative state handling and parameterized storage operations
+    /// </summary>
+    /// <remarks>
+    /// Due to current Orleans declarative persistence design, 
+    /// grains inherited from this type cannot be reentrant!
+    /// </remarks>
+    /// <typeparam name="TReadStateResult">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result.</typeparam>
+    /// <typeparam name="TWriteStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument.</typeparam>
+    /// <typeparam name="TClearStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument.</typeparam>
+    public abstract class MessageBasedGrain<TReadStateResult, TWriteStateArgument, TClearStateArgument> 
+       : MessageBasedGrainBase<IStateHolder<TReadStateResult, TWriteStateArgument, TClearStateArgument>>
+    {
+        /// <summary>
+        /// Default constructor, which initialize all local services to runtime-bound implementations by default.
+        /// </summary>
+        protected MessageBasedGrain()            
         {
-            DeactivateOnIdle();
+            if (GetType().GetCustomAttributes(typeof(ReentrantAttribute), true).Length > 0)
+                throw new NotSupportedException("Grains inherited from this type cannot be reentrant!");
         }
 
-        void IExposeGrainInternals.DelayDeactivation(TimeSpan timeSpan)
+        /// <summary>
+        /// PROHIBITED MEMBER!
+        /// </summary>
+        public new object State
         {
-            DelayDeactivation(timeSpan);
+            get { throw new InvalidOperationException("Use imperative methods on provided Storage object to read/write/clear state"); }
         }
 
-        Task<IOrleansReminder> IExposeGrainInternals.GetReminder(string reminderName)
+        /// <summary>
+        /// Gets or sets current instance of Unit of Work for controlling state checkpointing
+        /// </summary>
+        /// <value>
+        /// The storage.
+        /// </value>
+        /// <remarks>
+        /// Could be substituted for unit-testing purposes
+        /// </remarks>
+        public IStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument> Storage
         {
-            return GetReminder(reminderName);
+            get; set;
         }
 
-        Task<List<IOrleansReminder>> IExposeGrainInternals.GetReminders()
+        /// <summary>
+        /// This method is called at the end of the process of activating a grain.
+        /// It is called before any messages have been dispatched to the grain.
+        /// For grains with declared persistent state, this method is called after the State property has been populated.
+        /// </summary>
+        /// <returns></returns>
+        public override Task ActivateAsync()
         {
-            return GetReminders();
-        }
-
-        Task<IOrleansReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
-        {
-            return RegisterOrUpdateReminder(reminderName, dueTime, period);
-        }
-
-        Task IExposeGrainInternals.UnregisterReminder(IOrleansReminder reminder)
-        {
-            return UnregisterReminder(reminder);
-        }
-
-        IOrleansTimer IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
-        {
-            return RegisterTimer(asyncCallback, state, dueTime, period);
+            Storage = new DefaultStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
+            return TaskDone.Done;
         }
     }
 
