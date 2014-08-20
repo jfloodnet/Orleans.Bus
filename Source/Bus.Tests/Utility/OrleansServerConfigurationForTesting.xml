@@ -3,8 +3,12 @@
   <Globals>
     <StorageProviders>
       
-      <Provider Type="Orleans.Bus.MockStorageProvider" 
-                Name="PersistentGrainStorageProvider"
+      <Provider Type="Orleans.Bus.Persistence.GenericState.MockStorageProvider" 
+                Name="GenericStateStorageProvider"
+                DefaultValue="0"/>
+      
+      <Provider Type="Orleans.Bus.Persistence.ExplicitStatePassing.MockStorageProvider" 
+                Name="ExplicitStatePassingStorageProvider"
                 DefaultValue="0"/>
       
       <Provider Type="Orleans.Storage.MemoryStorage" 

@@ -4,44 +4,57 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    [Serializable, Immutable]
-    public class ChangeValue : Command
+    namespace Persistence.GenericState
     {
-        public readonly int Value;
-
-        public ChangeValue(int value)
+        [Serializable, Immutable]
+        public class SetValue : Command
         {
-            Value = value;
+            public int Value;
         }
-    }
 
-    [Serializable, Immutable]
-    public class ClearValue : Command
-    {}
+        [Serializable, Immutable]
+        public class ClearValue : Command
+        {}
 
-    [Serializable, Immutable]
-    public class GetValue : Query<string>
-    {}
+        [Serializable, Immutable]
+        public class GetValue : Query<string>
+        {}
 
-    [Serializable]
-    public class ValueChanged : Event
-    {
-        public readonly int Value;
-
-        public ValueChanged(int value)
+        [Handles(typeof(SetValue))]
+        [Handles(typeof(ClearValue))]
+        [Answers(typeof(GetValue))]
+        [ExtendedPrimaryKey]
+        public interface ITestGenericStatePersistentGrain : IMessageBasedGrain
         {
-            Value = value;
+            [Handler] Task HandleCommand(object cmd);
+            [Handler] Task<object> AnswerQuery(object query);
         }
-    }
-
-    [Handles(typeof(ChangeValue))]
-    [Handles(typeof(ClearValue))]
-    [Answers(typeof(GetValue))]
-    [Notifies(typeof(ValueChanged))]
-    [ExtendedPrimaryKey]
-    public interface ITestPersistentGrain : IMessageBasedGrain
+    }    
+    
+    namespace Persistence.ExplicitStatePassing
     {
-        [Handler] Task HandleCommand(object cmd);
-        [Handler] Task<object> AnswerQuery(object query);
+        [Serializable, Immutable]
+        public class SetValue : Command
+        {
+            public int Value;
+        }
+
+        [Serializable, Immutable]
+        public class ClearValue : Command
+        {}
+
+        [Serializable, Immutable]
+        public class GetValue : Query<string>
+        {}
+
+        [Handles(typeof(SetValue))]
+        [Handles(typeof(ClearValue))]
+        [Answers(typeof(GetValue))]
+        [ExtendedPrimaryKey]
+        public interface ITestExplicitStatePassingPersistentGrain : IMessageBasedGrain
+        {
+            [Handler] Task HandleCommand(object cmd);
+            [Handler] Task<object> AnswerQuery(object query);
+        }
     }
 }

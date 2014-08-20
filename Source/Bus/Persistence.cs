@@ -10,8 +10,7 @@ using Orleans.Providers;
 namespace Orleans.Bus
 {
     /// <summary>
-    /// Generic grain state holder. 
-    /// Removes necessity to create specific state interfaces in grain interface project.
+    /// Generic grain state holder. Removes necessity to create specific interfaces in grain interface project.
     /// </summary>
     public interface IStateHolder<T> : IGrainState
     {
@@ -25,12 +24,32 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Holds temporary state passed as argument or returned to\from storage provider. 
+    /// Holds temporary state passed as argument or returned to/from storage provider operations. 
     /// </summary>
-    public class StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>
+    // ReSharper disable once ClassNeverInstantiated.Global - New instance is automatically created by Orleans infrastructure
+    public class OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument>
     {
         /// <summary>
-        /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result
+        /// Says whether automatic request from Orleans infrastructure was made.
+        /// Used to check whether call to ReadStateAsync should be ignored.
+        /// For internal purposes only.
+        /// </summary>
+        internal bool Initialized
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Marks this holder as initialized
+        /// For internal purposes only.
+        /// </summary>
+        internal void Initialize()
+        {
+            Initialized = true;
+        }
+
+        /// <summary>
+        /// <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result
         /// </summary>
         public TReadStateResult ReadStateResult
         {
@@ -38,7 +57,7 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument
+        /// <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument
         /// </summary>
         public TWriteStateArgument WriteStateArgument
         {
@@ -46,7 +65,7 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument
+        /// <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument
         /// </summary>
         public TClearStateArgument ClearStateArgument
         {
@@ -55,9 +74,9 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Unit of work which controls state checkpointing
+    /// Controls state checkpointing
     /// </summary>
-    public interface IStateStorage
+    public interface IStorageProviderProxy
     {
         /// <summary>
         /// Async method to cause refresh of the current grain state data from backin store.
@@ -78,34 +97,34 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Unit of work which controls state checkpointing
+    /// Controls state checkpointing
     /// </summary>
-    public interface IStateStorage<TReadStateResult, in TWriteStateArgument, in TClearStateArgument>
+    public interface IStorageProviderProxy<TReadStateResult, in TWriteStateArgument, in TClearStateArgument>
     {
         /// <summary>
         /// Returns current grain state data from backin store.
         /// </summary>
-        /// <returns>Result returned from <see cref="StateStorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation</returns>
+        /// <returns>Result returned from <see cref="StorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation</returns>
         Task<TReadStateResult> ReadStateAsync();
 
         /// <summary>
         /// Writes passed grain state data into backin store.
         /// </summary>
-        /// <param name="arg"><see cref="StateStorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> argument</param>
+        /// <param name="arg"><see cref="StorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> argument</param>
         Task WriteStateAsync(TWriteStateArgument arg);
 
         /// <summary>
         /// Clears passed grain state data from backin store.
         /// </summary>
-        /// <param name="arg"><see cref="StateStorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> argument</param>
+        /// <param name="arg"><see cref="StorageProvider{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> argument</param>
         Task ClearStateAsync(TClearStateArgument arg);
     }
 
-    internal class DefaultStateStorage : IStateStorage
+    internal class DefaultStorageProviderProxy : IStorageProviderProxy
     {
         readonly IGrainState state;
 
-        public DefaultStateStorage(IGrainState state)
+        public DefaultStorageProviderProxy(IGrainState state)
         {
             this.state = state;
         }
@@ -126,47 +145,49 @@ namespace Orleans.Bus
         }
     }
 
-    internal class DefaultStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument>
+    internal class DefaultStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument>
     {
-        readonly IStateHolder<StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>> holder;
+        readonly OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument> context;
+        readonly IGrainState state;
 
-        public DefaultStateStorage(IStateHolder<StorageOperationState<TReadStateResult, TWriteStateArgument, TClearStateArgument>> holder)
+        public DefaultStorageProviderProxy(IStateHolder<OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument>> holder)
         {
-            this.holder = holder;
+            context = holder.State;
+            state = holder;
         }
 
         public async Task<TReadStateResult> ReadStateAsync()
         {
-            await holder.ReadStateAsync();
+            await state.ReadStateAsync();
             
-            var result = holder.State.ReadStateResult;
-            holder.State.ReadStateResult = default(TReadStateResult);
+            var result = context.ReadStateResult;
+            context.ReadStateResult = default(TReadStateResult);
 
             return result;
         }
 
         public async Task WriteStateAsync(TWriteStateArgument arg)
         {
-            holder.State.WriteStateArgument = arg;
-            await holder.WriteStateAsync();
+            context.WriteStateArgument = arg;
+            await state.WriteStateAsync();
 
-            holder.State.WriteStateArgument = default(TWriteStateArgument);
+            context.WriteStateArgument = default(TWriteStateArgument);
         }
 
         public async Task ClearStateAsync(TClearStateArgument arg)
         {
-            holder.State.ClearStateArgument = arg;
-            await holder.ClearStateAsync();
+            context.ClearStateArgument = arg;
+            await state.ClearStateAsync();
 
-            holder.State.ClearStateArgument = default(TClearStateArgument);
+            context.ClearStateArgument = default(TClearStateArgument);
         }
     }
 
     /// <summary>
-    /// Strongly-typed storage provider
+    /// Strongly-typed grain storage provider
     /// </summary>
     /// <typeparam name="TState">Type of the grain state</typeparam>
-    public abstract class StateStorageProvider<TState> : IStorageProvider
+    public abstract class StorageProvider<TState> : IStorageProvider
     {
         string IOrleansProvider.Name
         {
@@ -270,12 +291,12 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Strongly-typed storage provider with state passed/returned to/from persistence operation
+    /// Strongly-typed grain storage provider with state passed/returned to/from persistence operation
     /// </summary>
     /// <typeparam name="TReadStateResult">Type of the grain state</typeparam>
     /// <typeparam name="TWriteStateArgument">Type of the grain state</typeparam>
     /// <typeparam name="TClearStateArgument">Type of the grain state</typeparam>
-    public abstract class StateStorageProvider<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IStorageProvider
+    public abstract class StorageProvider<TReadStateResult, TWriteStateArgument, TClearStateArgument> : IStorageProvider
     {
         string IOrleansProvider.Name
         {
@@ -290,15 +311,15 @@ namespace Orleans.Bus
 
         async Task IStorageProvider.ReadStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
         {
-            var holder = Holder(grainState);
+            var context = Context(grainState);
 
-            if (holder.State == null)
+            if (!context.Initialized)
             {
-                holder.State = new ;
+                context.Initialize();
                 return;
             }
 
-            holder.ReadStateResult = await ReadStateAsync(grainReference.Id(), new GrainType(grainType));
+            context.ReadStateResult = await ReadStateAsync(grainReference.Id(), new GrainType(grainType));
         }
 
         Task IStorageProvider.WriteStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
@@ -313,18 +334,18 @@ namespace Orleans.Bus
 
         static TWriteStateArgument GetWriteStateArgument(IGrainState state)
         {
-            return Holder(state).WriteStateArgument;
+            return Context(state).WriteStateArgument;
         }
 
         static TClearStateArgument GetClearStateArgument(IGrainState state)
         {
-            return Holder(state).ClearStateArgument;
+            return Context(state).ClearStateArgument;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static IStateHolder<> Holder(IGrainState holder)
+        static OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument> Context(IGrainState state)
         {
-            return ((IStateHolder<>)holder);
+            return ((IStateHolder<OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument>>)state).State;
         }
 
         /// <summary>

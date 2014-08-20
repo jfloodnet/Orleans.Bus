@@ -291,7 +291,7 @@ namespace Orleans.Bus
     }
 
     /// <summary>
-    /// Base class for persistent message-based grains with mono state and parameterless storage operations
+    /// Base class for persistent message-based grains with generic state
     /// </summary>
     /// <typeparam name="TState">The type of the state.</typeparam>
     public abstract class MessageBasedGrain<TState> : MessageBasedGrainBase<IStateHolder<TState>>
@@ -323,7 +323,7 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Gets or sets current instance of Unit of Work for controlling state checkpointing
+        /// Gets or sets current instance of storage provider proxy for controlling state checkpointing
         /// </summary>
         /// <value>
         /// The storage.
@@ -331,7 +331,7 @@ namespace Orleans.Bus
         /// <remarks>
         /// Could be substiuted for unit-testing purposes
         /// </remarks>
-        public IStateStorage Storage
+        public IStorageProviderProxy Storage
         {
             get; set;
         }
@@ -345,23 +345,23 @@ namespace Orleans.Bus
         public override Task ActivateAsync()
         {
             Holder = base.State;
-            Storage = new DefaultStateStorage(base.State);
+            Storage = new DefaultStorageProviderProxy(base.State);
             return TaskDone.Done;
         }
     }   
     
     /// <summary>
-    /// Base class for persistent message-based grains with imperative state handling and parameterized storage operations
+    /// Base class for persistent message-based grains with explicit state passing to/from storage provider
     /// </summary>
     /// <remarks>
-    /// Due to current Orleans declarative persistence design, 
+    /// Due to current implementatio, which clears shared operation context object after every storage operation completes, 
     /// grains inherited from this type cannot be reentrant!
     /// </remarks>
-    /// <typeparam name="TReadStateResult">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result.</typeparam>
-    /// <typeparam name="TWriteStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument.</typeparam>
-    /// <typeparam name="TClearStateArgument">The type of <see cref="IStateStorage{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument.</typeparam>
-    public abstract class MessageBasedGrain<TReadStateResult, TWriteStateArgument, TClearStateArgument> 
-       : MessageBasedGrainBase<IStateHolder<>>
+    /// <typeparam name="TReadStateResult">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result.</typeparam>
+    /// <typeparam name="TWriteStateArgument">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument.</typeparam>
+    /// <typeparam name="TClearStateArgument">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument.</typeparam>
+    public abstract class MessageBasedGrain<TReadStateResult, TWriteStateArgument, TClearStateArgument>
+       : MessageBasedGrainBase<IStateHolder<OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument>>>
     {
         /// <summary>
         /// Default constructor, which initialize all local services to runtime-bound implementations by default.
@@ -381,7 +381,7 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Gets or sets current instance of Unit of Work for controlling state checkpointing
+        /// Gets or sets current instance of storage provider proxy for controlling state checkpointing
         /// </summary>
         /// <value>
         /// The storage.
@@ -389,7 +389,7 @@ namespace Orleans.Bus
         /// <remarks>
         /// Could be substituted for unit-testing purposes
         /// </remarks>
-        public IStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument> Storage
+        public IStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument> Storage
         {
             get; set;
         }
@@ -402,7 +402,7 @@ namespace Orleans.Bus
         /// <returns></returns>
         public override Task ActivateAsync()
         {
-            Storage = new DefaultStateStorage<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
+            Storage = new DefaultStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
             return TaskDone.Done;
         }
     }
