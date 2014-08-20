@@ -46,7 +46,7 @@
     <Compile Include="..\ProductAssemblyInfo.cs">
       <Link>Properties\ProductAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Notification.cs" />
+    <Compile Include="ReactiveNotification.cs" />
     <Compile Include="ReactiveObservableProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

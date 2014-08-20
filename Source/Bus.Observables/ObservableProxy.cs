@@ -7,74 +7,61 @@ namespace Orleans.Bus
 {
     /// <summary>
     /// Allows to attach and detach to discrete event notifications
-    /// To delete underlying runtime referece call <see cref="IDisposable.Dispose"/>
+    /// To delete underlying runtime reference call <see cref="IDisposable.Dispose"/>
     /// </summary>
     /// <remarks> Instances of this type are not thread safe </remarks>
     public interface IObservableProxy: IDisposable
-    {
+    {          
         /// <summary>
-        /// Attaches this observer proxy to receive event notifications of a particular type from the given source
-        /// and deliver them to the given <paramref name="callback"/>
+        /// Attaches this observer proxy to receive event notifications from the given source
+        /// and deliver them back via provided <paramref name="callbacks"/>
         /// </summary>
-        /// <typeparam name="TEvent">The type of event</typeparam>
         /// <param name="source">Id of the source grain</param>
-        /// <param name="callback">Notification callback</param>
+        /// <param name="callbacks">Notification callbacks</param>
         /// <returns>Promise</returns>
-        Task Attach<TEvent>(string source, Action<string, TEvent> callback);
+        Task Attach(string source, params Callback[] callbacks);
 
         /// <summary>
         /// Detaches this observer proxy from receiving event notifications of a particular type from the given source 
         /// </summary>
-        /// <typeparam name="TEvent">The type of event</typeparam>
         /// <param name="source">Id of the source grain</param>
+        /// <param name="notifications">Types of notification messages to detach from</param>
         /// <returns>Promise</returns>
-        Task Detach<TEvent>(string source);
+        Task Detach(string source, params Type[] notifications);
     }
 
     /// <summary>
-    /// Allows to attach and detach to discrete event notifications, in a generic fashion
-    /// To delete underlying runtime referece call <see cref="IDisposable.Dispose"/> method
+    /// Special structure to specify notification callback handler
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Useful for higher-order callback functions, when single callback method
-    /// could receive events of different types
-    /// </para>
-    /// <para>Instances of this type are not thread safe</para>
-    /// </remarks>
-    public interface IGenericObservableProxy : IDisposable
+    public class Callback
     {
-        /// <summary>
-        /// Attaches this observer proxy to receive event notifications of a particular type from the given source
-        /// and deliver them to the given loosely typed <paramref name="callback"/>.
-        /// </summary>
-        /// <typeparam name="TEvent">The type of event</typeparam>
-        /// <param name="source">Id of the source grain</param>
-        /// <param name="callback">Notification callback</param>
-        /// <returns>Promise</returns>
-        Task Attach<TEvent>(string source, Action<string, object> callback);
+        internal readonly Type Notification;
+        internal readonly Action<string, Notification> Handler;
 
         /// <summary>
-        /// Detaches this observer proxy from receiving event notifications of a particular type from the given source 
+        /// Creates new instance of notification <see cref="Callback"/>
         /// </summary>
-        /// <typeparam name="TEvent">The type of event</typeparam>
-        /// <param name="source">Id of the source grain</param>
-        /// <returns>Promise</returns>
-        Task Detach<TEvent>(string source);
-    }
-
-    /// <summary>
-    /// Factory for <see cref="IGenericObservableProxy"/>
-    /// </summary>
-    public class GenericObservableProxy : IGenericObservableProxy, IObserve
-    {
-        /// <summary>
-        /// Creates new <see cref="IGenericObservableProxy"/>
-        /// </summary>
-        /// <returns>New instance of <see cref="IGenericObservableProxy"/></returns>
-        public static async Task<IGenericObservableProxy> Create()
+        /// <param name="notification">Type of notification message to subscribe</param>
+        /// <param name="handler">Delegate handler</param>        
+        public Callback(Type notification, Action<string, Notification> handler)
         {
-            var observable = new GenericObservableProxy();
+            Notification = notification;
+            Handler = handler;
+        }
+    }
+
+    /// <summary>
+    /// Factory for <see cref="IObservableProxy"/>
+    /// </summary>
+    public class ObservableProxy : IObservableProxy, IObserve
+    {
+        /// <summary>
+        /// Creates new <see cref="IObservableProxy"/>
+        /// </summary>
+        /// <returns>New instance of <see cref="IObservableProxy"/></returns>
+        public static async Task<IObservableProxy> Create()
+        {
+            var observable = new ObservableProxy();
             
             var proxy = await SubscriptionManager.Instance.CreateProxy(observable);
             observable.Initialize(proxy);
@@ -82,8 +69,8 @@ namespace Orleans.Bus
             return observable;
         }
 
-        readonly IDictionary<Type, Action<string, object>> callbacks =
-             new Dictionary<Type, Action<string, object>>();
+        readonly IDictionary<Type, Action<string, Notification>> handlers =
+             new Dictionary<Type, Action<string, Notification>>();
 
         IObserve proxy;
 
@@ -97,59 +84,33 @@ namespace Orleans.Bus
             SubscriptionManager.Instance.DeleteProxy(proxy);
         }
 
-        async Task IGenericObservableProxy.Attach<TEvent>(string source, Action<string, object> callback)
+        async Task IObservableProxy.Attach(string source, params Callback[] callbacks)
         {
-            callbacks[typeof(TEvent)] = callback;
-            await SubscriptionManager.Instance.Subscribe<TEvent>(source, proxy);
+            foreach (var callback in callbacks)
+                handlers[callback.Notification] = callback.Handler;
+
+            var notifications = callbacks
+                .Select(x => x.Notification)
+                .ToArray();
+
+            await SubscriptionManager.Instance.Subscribe(source, proxy, notifications);
         }
 
-        async Task IGenericObservableProxy.Detach<TEvent>(string source)
+        async Task IObservableProxy.Detach(string source, params Type[] notifications)
         {
-            callbacks.Remove(typeof(TEvent));
-            await SubscriptionManager.Instance.Unsubscribe<TEvent>(source, proxy);
+            foreach (var notification in notifications)
+                handlers.Remove(notification);
+
+            await SubscriptionManager.Instance.Unsubscribe(source, proxy, notifications);
         }
 
-        void IObserve.On(string source, object e)
+        void IObserve.On(string source, params Notification[] notifications)
         {
-            var callback = callbacks[e.GetType()];
-            callback(source, e);
-        }
-    }
-
-    /// <summary>
-    /// Factory for <see cref="IGenericObservableProxy"/>
-    /// </summary>
-    public class ObservableProxy : IObservableProxy
-    {
-        /// <summary>
-        /// Creates new <see cref="IObservableProxy"/>
-        /// </summary>
-        /// <returns>New instance of <see cref="IObservableProxy"/></returns>
-        public static async Task<IObservableProxy> Create()
-        {
-            return new ObservableProxy(await GenericObservableProxy.Create());
-        }
-
-        readonly IGenericObservableProxy proxy;
-
-        ObservableProxy(IGenericObservableProxy proxy)
-        {
-            this.proxy = proxy;
-        }
-
-        void IDisposable.Dispose()
-        {
-            proxy.Dispose();
-        }
-
-        Task IObservableProxy.Attach<TEvent>(string source, Action<string, TEvent> callback)
-        {
-            return proxy.Attach<TEvent>(source, (s, e) => callback(s, (TEvent) e));
-        }
-
-        Task IObservableProxy.Detach<TEvent>(string source)
-        {
-            return proxy.Detach<TEvent>(source);
+            foreach (var notification in notifications)
+            {
+                var callback = handlers[notification.Type];
+                callback(source, notification);   
+            }
         }
     }
 }

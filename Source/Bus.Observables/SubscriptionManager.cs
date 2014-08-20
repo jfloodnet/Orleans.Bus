@@ -11,8 +11,8 @@ namespace Orleans.Bus
            new SubscriptionManager(DynamicGrainFactory.Instance)
                .Initialize();
 
-        readonly Dictionary<Type, EventSubscriber> events =
-             new Dictionary<Type, EventSubscriber>();
+        readonly Dictionary<Type, Type> notifiers =
+             new Dictionary<Type, Type>();
 
         readonly DynamicGrainFactory factory;
 
@@ -32,15 +32,7 @@ namespace Orleans.Bus
         void Register(Type grain)
         {
             foreach (var attribute in grain.Attributes<NotifiesAttribute>())
-            {
-                RegisterEventSubscriber(grain, attribute.Event);
-            }
-        }
-
-        void RegisterEventSubscriber(Type grain, Type @event)
-        {
-            var handler = EventSubscriber.Create(grain, @event);
-            events.Add(@event, handler);
+                notifiers.Add(attribute.Event, grain);
         }
 
         public async Task<IObserve> CreateProxy(IObserve client)
@@ -53,51 +45,48 @@ namespace Orleans.Bus
             ObserveFactory.DeleteObjectReference(observer);
         }
 
-        public async Task Subscribe<TEvent>(string source, IObserve proxy)
+        public async Task Subscribe(string source, IObserve proxy, params Type[] notifications)
         {
-            var handler = events[typeof(TEvent)];
+            Type notifier = null;
 
-            var reference = factory.GetReference(handler.Grain, source);
+            foreach (var notification in notifications)
+            {
+                Type grainType;
+                if (!notifiers.TryGetValue(notification, out grainType))
+                    throw new ApplicationException("Can't find source grain which handles notification type " + notification.FullName);
 
-            await handler.Subscribe(reference, proxy);
+                if (notifier != null && notifier != grainType)
+                    throw new ApplicationException("Can't subscribe to multiple grain types for the same source id");
+
+                notifier = grainType;
+            }
+
+            var reference = factory.GetReference(notifier, source);
+            var observable = (IObservableGrain)reference;
+
+            await observable.Attach(proxy, notifications);
         }
 
-        public async Task Unsubscribe<TEvent>(string source, IObserve proxy)
+        public async Task Unsubscribe(string source, IObserve proxy, params Type[] notifications)
         {
-            var handler = events[typeof(TEvent)];
+            Type notifier = null;
 
-            var reference = factory.GetReference(handler.Grain, source);
-
-            await handler.Unsubscribe(reference, proxy);
-        }
-
-        class EventSubscriber
-        {
-            public readonly Type Grain;
-            public readonly Type Event;
-
-            EventSubscriber(Type grain, Type @event)
+            foreach (var notification in notifications)
             {
-                Grain = grain;
-                Event = @event;
+                Type grainType;
+                if (!notifiers.TryGetValue(notification, out grainType))
+                    throw new ApplicationException("Can't find source grain which handles notification type " + notification.FullName);
+
+                if (notifier != null && notifier != grainType)
+                    throw new ApplicationException("Can't unsubscribe from multiple grain types for the same source id");
+
+                notifier = grainType;
             }
 
-            public static EventSubscriber Create(Type grain, Type @event)
-            {
-                return new EventSubscriber(grain, @event);
-            }
+            var reference = factory.GetReference(notifier, source);
+            var observable = (IObservableGrain)reference;
 
-            public async Task Subscribe(object grain, IObserve proxy)
-            {
-                var observable = (IObservableGrain)grain;
-                await observable.Attach(proxy, Event);
-            }
-
-            public async Task Unsubscribe(object grain, IObserve proxy)
-            {
-                var observable = (IObservableGrain)grain;
-                await observable.Detach(proxy, Event);
-            }
+            await observable.Detach(proxy, notifications);
         }
     }
 }

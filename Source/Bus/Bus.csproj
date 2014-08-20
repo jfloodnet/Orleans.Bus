@@ -54,6 +54,7 @@
     <Compile Include="Identity.cs" />
     <Compile Include="MessageBasedGrain.cs" />
     <Compile Include="MessageBus.cs" />
+    <Compile Include="Notification.cs" />
     <Compile Include="Observable.cs" />
     <Compile Include="ObserverCollection.cs" />
     <Compile Include="PocoGrain.cs" />

@@ -6,32 +6,32 @@ namespace Orleans.Bus
 {
     /// <summary>
     /// This  is a helper class for grains that support observers.
-    /// It provides methods for attaching/detaching observers and for notifying about particular events.
+    /// It provides methods for attaching/detaching observers and for notifying about particular notifications.
     /// </summary>
-    public interface IObserverCollection
+    public interface IObserverCollection 
     {
         /// <summary>
-        /// Attaches given observer for the given type of event.
+        /// Attaches given observer for the given type of notification.
         /// </summary>
-        /// <param name="observer">The observer proxy.</param>
-        /// <param name="event">The type of event</param>
+        /// <param name="observer">The observer proxy</param>
+        /// <param name="notification">The type of notification message</param>
         /// <remarks>The operation is idempotent</remarks>
-        void Attach(IObserve observer, Type @event);
+        void Attach(IObserve observer, Type notification);
 
         /// <summary>
-        /// Detaches given observer for the given type of event.
+        /// Detaches given observer for the given type of notification.
         /// </summary>
-        /// <param name="observer">The observer proxy.</param>
-        /// <param name="event">The type of event</param>
+        /// <param name="observer">The observer proxy</param>
+        /// <param name="notification">The type of notification message</param>
         /// <remarks>The operation is idempotent</remarks>
-        void Detach(IObserve observer, Type @event);
+        void Detach(IObserve observer, Type notification);
 
         /// <summary>
-        /// Notifies all attached observers about given event.
+        /// Notifies all attached observers about given notifications.
         /// </summary>
-        /// <param name="source">An id of the source grain</param>
-        /// <param name="event">An event</param>
-        void Notify(string source, object @event);
+        /// <param name="source">The id of the source grain</param>
+        /// <param name="notifications">The notification messages</param>
+        void Notify(string source, params Notification[] notifications);
     }
 
     /// <summary>
@@ -41,54 +41,87 @@ namespace Orleans.Bus
     {
         readonly IDictionary<Type, HashSet<IObserve>> subscriptions = new Dictionary<Type, HashSet<IObserve>>();
 
-        void IObserverCollection.Attach(IObserve observer, Type @event)
+        void IObserverCollection.Attach(IObserve observer, Type notification)
         {
-            var observers = Observers(@event);
+            var observers = Observers(notification);
 
             if (observers == null)
             {
                 observers = new HashSet<IObserve>();
-                subscriptions.Add(@event, observers);
+                subscriptions.Add(notification, observers);
             }
 
             observers.Add(observer);
         }
 
-        void IObserverCollection.Detach(IObserve observer, Type @event)
+        void IObserverCollection.Detach(IObserve observer, Type notification)
         {
-            var observers = Observers(@event);
+            var observers = Observers(notification);
             
             if (observers != null)
                 observers.Remove(observer);
         }
 
-        void IObserverCollection.Notify(string source, object @event)
+        void IObserverCollection.Notify(string source, params Notification[] notifications)
         {
             var failed = new List<IObserve>();
 
-            var observers = Observers(@event.GetType());
-            if (observers == null)
-                return;
+            foreach (var recipient in GroupByRecipient(notifications))
+                TryDeliver(recipient.Key, recipient.Value.ToArray(), source, failed);
 
-            foreach (var observer in observers)
+            Cleanup(failed);
+        }
+
+        Dictionary<IObserve, List<Notification>> GroupByRecipient(IEnumerable<Notification> notifications)
+        {
+            var recipients = new Dictionary<IObserve, List<Notification>>();
+
+            foreach (var notification in notifications)
             {
-                try
+                var observers = Observers(notification.Type);
+
+                if (observers == null)
+                    continue;
+
+                foreach (var observer in observers)
                 {
-                    observer.On(source, @event);
-                }
-                catch (Exception)
-                {
-                    failed.Add(observer);
+                    List<Notification> list;
+
+                    if (!recipients.TryGetValue(observer, out list))
+                    {
+                        list = new List<Notification>();
+                        recipients.Add(observer, list);
+                    }
+
+                    list.Add(notification);
                 }
             }
 
-            observers.RemoveWhere(failed.Contains);
+            return recipients;
         }
 
-        internal HashSet<IObserve> Observers(Type @event)
+        static void TryDeliver(IObserve observer, Notification[] notifications, string source, ICollection<IObserve> failed)
+        {
+            try
+            {
+                observer.On(source, notifications);
+            }
+            catch (Exception)
+            {
+                failed.Add(observer);
+            }
+        }
+
+        void Cleanup(ICollection<IObserve> failed)
+        {
+            foreach (var subscription in subscriptions)
+                subscription.Value.RemoveWhere(failed.Contains);
+        }
+
+        internal HashSet<IObserve> Observers(Type notification)
         {
             HashSet<IObserve> result;
-            return subscriptions.TryGetValue(@event, out result) ? result : null;
+            return subscriptions.TryGetValue(notification, out result) ? result : null;
         }
     }
 }

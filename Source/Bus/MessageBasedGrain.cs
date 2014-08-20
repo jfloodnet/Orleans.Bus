@@ -60,36 +60,44 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Attaches untyped observer for the given type of event.
+        /// Attaches given selective observer for the given types of notifications.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        /// <remarks>The operation is idempotent</remarks>
-        public virtual Task Attach(IObserve o, Type e)
+        /// <param name="observer">The observer proxy.</param>
+        /// <param name="notifications">The types of notifications</param>
+        /// <remarks>
+        /// The operation is idempotent
+        /// </remarks>
+        public virtual Task Attach(IObserve observer, params Type[] notifications)
         {
-            Observers.Attach(o, e);
+            foreach (var notification in notifications)
+                Observers.Attach(observer, notification);
+
             return TaskDone.Done;
         }
 
         /// <summary>
-        /// Detaches given untyped observer for the given type of event.
+        /// Detaches given selective observer for the given types of notifications.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        /// <remarks>The operation is idempotent</remarks>
-        public virtual Task Detach(IObserve o, Type e)
+        /// <param name="observer">The observer proxy.</param>
+        /// <param name="notifications">The types of notifications</param>
+        /// <remarks>
+        /// The operation is idempotent
+        /// </remarks>
+        public virtual Task Detach(IObserve observer, params Type[] notifications)
         {
-            Observers.Detach(o, e);
+            foreach (var notification in notifications)
+                Observers.Detach(observer, notification);
+
             return TaskDone.Done;
         }
 
         /// <summary>
-        /// Notifies all attached observers about given event.
+        /// Notifies all attached observers about given notifications.
         /// </summary>
-        /// <param name="e">An event</param>
-        protected void Notify<TEvent>(TEvent e)
+        /// <param name="notifications">The notification messages</param>
+        protected void Notify(params Notification[] notifications)
         {
-            Observers.Notify(Id(), e);
+            Observers.Notify(Id(), notifications);
         }
 
         void IExposeGrainInternals.DeactivateOnIdle()
@@ -179,43 +187,44 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Attaches untyped observer for the given type of event.
+        /// Attaches given selective observer for the given types of notifications.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        /// <returns></returns>
+        /// <param name="observer">The observer proxy.</param>
+        /// <param name="notifications">The types of notifications</param>
         /// <remarks>
         /// The operation is idempotent
         /// </remarks>
-        public virtual Task Attach(IObserve o, Type e)
+        public virtual Task Attach(IObserve observer, params Type[] notifications)
         {
-            Observers.Attach(o, e);
+            foreach (var notification in notifications)
+                Observers.Attach(observer, notification);
+
             return TaskDone.Done;
         }
 
         /// <summary>
-        /// Detaches given untyped observer for the given type of event.
+        /// Detaches given selective observer for the given types of notifications.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        /// <returns></returns>
+        /// <param name="observer">The observer proxy.</param>
+        /// <param name="notifications">The types of notifications</param>
         /// <remarks>
         /// The operation is idempotent
         /// </remarks>
-        public virtual Task Detach(IObserve o, Type e)
+        public virtual Task Detach(IObserve observer, params Type[] notifications)
         {
-            Observers.Detach(o, e);
+            foreach (var notification in notifications)
+                Observers.Detach(observer, notification);
+
             return TaskDone.Done;
         }
 
         /// <summary>
-        /// Notifies all attached observers about given event.
+        /// Notifies all attached observers about given notifications.
         /// </summary>
-        /// <typeparam name="TEvent">The type of the event.</typeparam>
-        /// <param name="e">An event</param>
-        protected void Notify<TEvent>(TEvent e)
+        /// <param name="notifications">The notification messages</param>
+        protected void Notify(params Notification[] notifications)
         {
-            Observers.Notify(Id(), e);
+            Observers.Notify(Id(), notifications);
         }
 
         /// <summary>

@@ -8,52 +8,52 @@ namespace Orleans.Bus
     [TestFixture]
     public class ObservableCollectionFixture
     {
-        readonly Type @event = typeof(TextPublished);
+        readonly Type notification = typeof(FooPublished);
 
-        IMessageBus bus;
         IObserverCollection collection;
-
         IObserve client;
         IObserve proxy;
 
         [SetUp]
         public void SetUp()
         {
-            bus = MessageBus.Instance;
-
             client = new Observe();
             proxy  = SubscriptionManager.Instance.CreateProxy(client).Result;
-
             collection = new ObserverCollection();
         }
 
         [Test]
         public void Notify_when_no_observers()
         {
-            Assert.DoesNotThrow(() => collection.Notify("test", @event));
+            Assert.DoesNotThrow(() => collection.Notify("test", Notification()));
         }
 
         [Test]
         public void Attach_is_idempotent()
         {
-            collection.Attach(proxy, @event);
+            collection.Attach(proxy, notification);
             
             Assert.DoesNotThrow(() => 
-                collection.Attach(proxy, @event));
+                collection.Attach(proxy, notification));
 
-            Assert.AreEqual(1, GetObservers(@event).Count);
+            Assert.AreEqual(1, GetObservers(notification).Count);
         }
 
         [Test]
         public void Detach_is_idempotent()
         {
-            collection.Attach(proxy, @event);
-            collection.Detach(proxy, @event);
+            collection.Attach(proxy, notification);
+            collection.Detach(proxy, notification);
             
             Assert.DoesNotThrow(() => 
-                collection.Detach(proxy, @event));
+                collection.Detach(proxy, notification));
 
-            Assert.AreEqual(0, GetObservers(@event).Count);
+            Assert.AreEqual(0, GetObservers(notification).Count);
+        }
+
+        static Notification Notification()
+        {
+            return new Notification(typeof(FooPublished), new FooPublished("foo"));
         }
 
         HashSet<IObserve> GetObservers(Type @event)
@@ -63,7 +63,7 @@ namespace Orleans.Bus
 
         class Observe : IObserve
         {
-            public void On(string source, object e)
+            public void On(string source, params Notification[] notifications)
             {}
         }
     }

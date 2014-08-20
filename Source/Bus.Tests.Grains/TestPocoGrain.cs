@@ -29,10 +29,10 @@ namespace Orleans.Bus
         string fooText = "";
         string barText = "";
 
-        public TestPoco(string id, Action<Event> notify)
+        public TestPoco(string id, Action<Notification[]> notify)
         {
             this.id = id;
-            this.notify = notify;
+            this.notify = x => notify(new[]{new Notification(x.GetType(), x)});
         }
 
         public Task Activate()
@@ -71,9 +71,16 @@ namespace Orleans.Bus
             return Task.FromResult(barText + "-" + id);
         }
 
-        public Task Handle(PublishText cmd)
+        public Task Handle(PublishFoo cmd)
         {
-            notify(new TextPublished(cmd.Text));
+            notify(new FooPublished(cmd.Foo));
+
+            return TaskDone.Done;
+        }        
+        
+        public Task Handle(PublishBar cmd)
+        {
+            notify(new BarPublished(cmd.Bar));
 
             return TaskDone.Done;
         }

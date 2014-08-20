@@ -38,24 +38,46 @@ namespace Orleans.Bus
     {}
 
     [Immutable, Serializable]
-    public class PublishText : Command
+    public class PublishFoo : Command
     {
-        public readonly string Text;
+        public readonly string Foo;
 
-        public PublishText(string text)
+        public PublishFoo(string foo)
         {
-            Text = text;
+            Foo = foo;
         }
     }
 
     [Serializable]
-    public class TextPublished : Event
+    public class FooPublished : Event
     {
-        public readonly string Text;
+        public readonly string Foo;
 
-        public TextPublished(string text)
+        public FooPublished(string foo)
         {
-            Text = text;
+            Foo = foo;
+        }
+    }
+
+    [Immutable, Serializable]
+    public class PublishBar : Command
+    {
+        public readonly string Bar;
+
+        public PublishBar(string bar)
+        {
+            Bar = bar;
+        }
+    }
+
+    [Serializable]
+    public class BarPublished : Event
+    {
+        public readonly string Bar;
+
+        public BarPublished(string bar)
+        {
+            Bar = bar;
         }
     }
 
@@ -64,8 +86,10 @@ namespace Orleans.Bus
     [Handles(typeof(ThrowException))]
     [Answers(typeof(GetFoo))]
     [Answers(typeof(GetBar))]
-    [Handles(typeof(PublishText))]
-    [Notifies(typeof(TextPublished))]
+    [Handles(typeof(PublishFoo))]
+    [Handles(typeof(PublishBar))]
+    [Notifies(typeof(FooPublished))]
+    [Notifies(typeof(BarPublished))]
     [ExtendedPrimaryKey]
     public interface ITestPocoGrain : IPocoGrain
     {}

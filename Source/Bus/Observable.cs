@@ -6,16 +6,19 @@ namespace Orleans.Bus
 {
     /// <summary>
     /// Callback interface need to be implemented by any client, 
-    /// which want to be notified about particluar events.
+    /// which want to be notified about particular notifications.
     /// </summary>
+    /// <remarks>
+    /// Internal iterface used by infrastructure
+    /// </remarks>>
     public interface IObserve : IGrainObserver
     {
         /// <summary>
-        /// Event notifications will be delivered to this callback method
+        /// Notifications will be delivered to this callback method
         /// </summary>
-        /// <param name="source">An id of the source grain</param>
-        /// <param name="e">An event</param>
-        void On(string source, object e);
+        /// <param name="source">The id of the source grain</param>
+        /// <param name="notifications">The notification messages</param>
+        void On(string source, params Notification[] notifications);
     }
 
     /// <summary>
@@ -24,17 +27,17 @@ namespace Orleans.Bus
     public interface IObservableGrain : IGrain
     {
         /// <summary>
-        /// Attaches given selective observer for the given type of event.
+        /// Attaches given selective observer for the given types of notification messages.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        Task Attach(IObserve o, Type e);
+        /// <param name="observer">The observer proxy</param>
+        /// <param name="notifications">The types of notification messages</param>
+        Task Attach(IObserve observer, params Type[] notifications);
 
         /// <summary>
-        /// Detaches given selective observer for the given type of event.
+        /// Detaches given selective observer for the given types of notifications.
         /// </summary>
-        /// <param name="o">The observer proxy.</param>
-        /// <param name="e">The type of event</param>
-        Task Detach(IObserve o, Type e);
+        /// <param name="observer">The observer proxy</param>
+        /// <param name="notifications">The types of notification messages</param>
+        Task Detach(IObserve observer, params Type[] notifications);
     }
 }

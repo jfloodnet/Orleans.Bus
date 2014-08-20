@@ -27,21 +27,21 @@ namespace Orleans.Bus
                 var received = new AutoResetEvent(false);
 
                 string source = null;
-                TextPublished @event = null;
+                FooPublished @event = null;
 
-                var observable = await proxy.Attach<TextPublished>(grainId);
+                var observable = await proxy.Attach(grainId, typeof(FooPublished));
                 observable.Subscribe(e =>
                 {
                     source = e.Source;
-                    @event = e.Message;
+                    @event = e.Payload.Message as FooPublished; 
                     received.Set();
                 });
 
-                await bus.Send(grainId, new PublishText("sub"));
+                await bus.Send(grainId, new PublishFoo("foo"));
                 received.WaitOne(TimeSpan.FromSeconds(5));
 
                 Assert.NotNull(@event);
-                Assert.AreEqual("sub", @event.Text);
+                Assert.AreEqual("foo", @event.Foo);
                 Assert.AreEqual(grainId, source);
             }
         }
@@ -56,85 +56,24 @@ namespace Orleans.Bus
                 var received = new AutoResetEvent(false);
 
                 string source = null;
-                TextPublished @event = null;
+                FooPublished @event = null;
 
-                var first = await proxy.Attach<TextPublished>(grainId);
+                var first = await proxy.Attach(grainId, typeof(FooPublished));
                 Debug.Assert(first != null);
 
-                var observable = await proxy.Attach<TextPublished>(grainId);
+                var observable = await proxy.Attach(grainId, typeof(FooPublished));
                 observable.Subscribe(e =>
                 {
                     source = e.Source;
-                    @event = e.Message;
+                    @event = e.Payload.Message as FooPublished; 
                     received.Set();
                 });
 
-                await bus.Send(grainId, new PublishText("sub"));
+                await bus.Send(grainId, new PublishFoo("foo"));
                 received.WaitOne(TimeSpan.FromSeconds(5));
 
                 Assert.NotNull(@event);
-                Assert.AreEqual("sub", @event.Text);
-                Assert.AreEqual(grainId, source);
-            }
-        }
-
-        [Test]
-        public async void Generic_subscription()
-        {
-            const string grainId = "333";
-
-            using (var proxy = await GenericReactiveObservableProxy.Create())
-            {
-                var received = new AutoResetEvent(false);
-
-                string source = null;
-                TextPublished @event = null;
-
-                var observable = await proxy.Attach<TextPublished>(grainId);
-                observable.Subscribe(e =>
-                {
-                    source = e.Source;
-                    @event = (TextPublished) e.Message;
-                    received.Set();
-                });
-
-                await bus.Send(grainId, new PublishText("sub"));
-                received.WaitOne(TimeSpan.FromSeconds(5));
-
-                Assert.NotNull(@event);
-                Assert.AreEqual("sub", @event.Text);
-                Assert.AreEqual(grainId, source);
-            }
-        }
-
-        [Test]
-        public async void Generic_subscription_is_idempotent_and_callback_will_be_overriden()
-        {
-            const string grainId = "444";
-
-            using (var proxy = await GenericReactiveObservableProxy.Create())
-            {
-                var received = new AutoResetEvent(false);
-
-                string source = null;
-                TextPublished @event = null;
-
-                var first = await proxy.Attach<TextPublished>(grainId);
-                Debug.Assert(first != null);
-
-                var observable = await proxy.Attach<TextPublished>(grainId);
-                observable.Subscribe(e =>
-                {
-                    source = e.Source;
-                    @event = (TextPublished) e.Message;
-                    received.Set();
-                });
-
-                await bus.Send(grainId, new PublishText("sub"));
-                received.WaitOne(TimeSpan.FromSeconds(5));
-
-                Assert.NotNull(@event);
-                Assert.AreEqual("sub", @event.Text);
+                Assert.AreEqual("foo", @event.Foo);
                 Assert.AreEqual(grainId, source);
             }
         }
