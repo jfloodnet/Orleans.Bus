@@ -99,7 +99,7 @@ namespace Orleans.Bus
 
         async Task IGenericObservableProxy.Attach<TEvent>(string source, Action<string, object> callback)
         {
-            callbacks.Add(typeof(TEvent), callback);
+            callbacks[typeof(TEvent)] = callback;
             await SubscriptionManager.Instance.Subscribe<TEvent>(source, proxy);
         }
 

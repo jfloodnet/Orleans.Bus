@@ -97,8 +97,9 @@ namespace Orleans.Bus
         async Task<IObservable<Notification>> IGenericReactiveObservableProxy.Attach<TEvent>(string source)
         {
             var subject = new Subject<Notification>();
-            callbacks.Add(typeof(TEvent), (s, o) =>
-                subject.OnNext(new Notification(s, o)));
+            
+            callbacks[typeof(TEvent)] = 
+                (s, o) => subject.OnNext(new Notification(s, o));
 
             await SubscriptionManager.Instance.Subscribe<TEvent>(source, proxy);
             return subject;
