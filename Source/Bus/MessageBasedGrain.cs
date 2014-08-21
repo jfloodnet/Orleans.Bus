@@ -353,8 +353,8 @@ namespace Orleans.Bus
         /// <returns></returns>
         public override Task ActivateAsync()
         {
-            Holder = base.State;
-            Storage = new DefaultStorageProviderProxy(base.State);
+            Holder = Holder ?? base.State;
+            Storage = Storage ?? new DefaultStorageProviderProxy(base.State);
             return TaskDone.Done;
         }
     }   
@@ -411,7 +411,7 @@ namespace Orleans.Bus
         /// <returns></returns>
         public override Task ActivateAsync()
         {
-            Storage = new DefaultStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
+            Storage = Storage ?? new DefaultStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
             return TaskDone.Done;
         }
     }
