@@ -35,8 +35,15 @@ namespace Orleans.Bus
     /// </summary>
     public class Callback
     {
-        internal readonly Type Notification;
-        internal readonly Action<string, Notification> Handler;
+        /// <summary>
+        /// Type of notification message to subscribe
+        /// </summary>
+        public readonly Type Notification;
+
+        /// <summary>
+        /// Delegate handler
+        /// </summary>
+        public readonly Action<string, Notification> Handler;
 
         /// <summary>
         /// Creates new instance of notification <see cref="Callback"/>
