@@ -60,7 +60,10 @@ const string OutputPath = RootPath + @"\Output";
 	Cmd(@"Tools\Nuget.exe pack Build\{Project}.nuspec -Version {version} " +
 		 "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
 
-	Cmd(@"Tools\Nuget.exe pack Build\{Project}.Reactive.nuspec -Version {version} " +
+    Cmd(@"Tools\Nuget.exe pack Build\{Project}.Reactive.nuspec -Version {version} " +
+         "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
+	
+    Cmd(@"Tools\Nuget.exe pack Build\{Project}.Testing.nuspec -Version {version} " +
 		 "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
 }
 

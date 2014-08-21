@@ -6,13 +6,14 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10432733-799C-4325-BC6A-7E76AB7F39C3}</ProjectGuid>
+    <ProjectGuid>{37E40F4A-6A78-417D-AAE8-924720B389C0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Orleans.Bus</RootNamespace>
-    <AssemblyName>Orleans.Bus.Tests.Grains</AssemblyName>
+    <RootNamespace>Sample</RootNamespace>
+    <AssemblyName>Sample.Interfaces</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,42 +35,28 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml" />
     <Reference Include="Orleans">
       <HintPath>$(OrleansSDK)\Binaries\OrleansClient\Orleans.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IApi.cs" />
+    <Compile Include="ITopic.cs" />
+    <Compile Include="Meta.cs" />
+    <Compile Include="Properties\orleans.codegen.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestPersistentGrain.cs" />
-    <Compile Include="TestPocoGrain.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bus.Observables\Bus.Observables.csproj">
-      <Project>{ebb46e7e-96f5-41b7-9bbf-155b540a543b}</Project>
-      <Name>Bus.Observables</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Bus.Tests.Grains.Interfaces\Bus.Tests.Grains.Interfaces.csproj">
-      <Project>{3d7a4d04-6d86-458a-9c52-331fae3d428c}</Project>
-      <Name>Bus.Tests.Grains.Interfaces</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Bus\Bus.csproj">
       <Project>{944568ea-bc0b-49bc-af0f-b4a4a62858ac}</Project>
       <Name>Bus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <OrleansProjectType>Server</OrleansProjectType>
+    <OrleansProjectType>Client</OrleansProjectType>
   </PropertyGroup>
   <Import Project="$(OrleansSDK)\Binaries\OrleansClient\Orleans.SDK.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

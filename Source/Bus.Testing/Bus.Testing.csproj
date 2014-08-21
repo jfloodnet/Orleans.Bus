@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10432733-799C-4325-BC6A-7E76AB7F39C3}</ProjectGuid>
+    <ProjectGuid>{0EEC0553-0B9A-4E51-94BF-694DC7164B92}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Orleans.Bus</RootNamespace>
-    <AssemblyName>Orleans.Bus.Tests.Grains</AssemblyName>
+    <AssemblyName>Orleans.Bus.Testing</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,48 +29,44 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Orleans.Bus.Testing.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml" />
     <Reference Include="Orleans">
       <HintPath>$(OrleansSDK)\Binaries\OrleansClient\Orleans.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\ProductAssemblyInfo.cs">
+      <Link>Properties\ProductAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="ActivationMock.cs" />
+    <Compile Include="Expectations.cs" />
+    <Compile Include="ExpressionExtensions.cs" />
+    <Compile Include="MessageBusMock.cs" />
+    <Compile Include="StorageProviderProxyMock.cs" />
+    <Compile Include="StateHolderStub.cs" />
+    <Compile Include="ObservableProxyMock.cs" />
+    <Compile Include="ObserverCollectionMock.cs" />
+    <Compile Include="ReminderCollectionMock.cs" />
+    <Compile Include="TimerCollectionMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestPersistentGrain.cs" />
-    <Compile Include="TestPocoGrain.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bus.Observables\Bus.Observables.csproj">
       <Project>{ebb46e7e-96f5-41b7-9bbf-155b540a543b}</Project>
       <Name>Bus.Observables</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Bus.Tests.Grains.Interfaces\Bus.Tests.Grains.Interfaces.csproj">
-      <Project>{3d7a4d04-6d86-458a-9c52-331fae3d428c}</Project>
-      <Name>Bus.Tests.Grains.Interfaces</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Bus\Bus.csproj">
       <Project>{944568ea-bc0b-49bc-af0f-b4a4a62858ac}</Project>
       <Name>Bus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <OrleansProjectType>Server</OrleansProjectType>
-  </PropertyGroup>
-  <Import Project="$(OrleansSDK)\Binaries\OrleansClient\Orleans.SDK.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Orleans.Bus.Testing</id>
+    <version>$version$</version>
+    <authors>Yevhen Bobrov</authors>
+    <owners>Yevhen Bobrov</owners>
+    <licenseUrl>http://github.com/yevhen/Orleans.Bus/blob/master/LICENSE</licenseUrl>
+    <projectUrl>http://github.com/yevhen/Orleans.Bus</projectUrl>
+    <iconUrl>https://github.com/yevhen/Orleans.Bus/raw/master/Source/Bus.Testing/Logo.png</iconUrl>
+    <description>Connvinient unit testing infrastructure for projects based on Orleans.Bus</description>
+    <tags>Orleans messaging bus actor concurrency CQRS unit testing mocks</tags>
+    <dependencies>
+        <dependency id="Orleans.Bus" version="$version$" />
+    </dependencies>      
+  </metadata>
+  <files>
+    <file src="Output\Package\Release\Orleans.Bus.Testing.dll" target="lib/net45" />
+    <file src="Output\Package\Release\Orleans.Bus.Testing.xml" target="lib/net45" />
+    <file src="Output\Package\Release\Orleans.Bus.Testing.pdb" target="lib/net45" />    
+  </files>
+</package>

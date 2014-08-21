@@ -20,10 +20,9 @@
   <Defaults>
     <Networking Address="localhost" Port="11111" />
     <ProxyingGateway Address="localhost" Port="30000" />
-    <Tracing DefaultTraceLevel="Warning" TraceToConsole="true" TraceToFile="{0}-{1}.log">
+    <Tracing DefaultTraceLevel="Warning" TraceToConsole="true" TraceToFile="">
       <TraceLevelOverride LogPrefix="Application" TraceLevel="Info" />
     </Tracing>
-    <Statistics MetricsTableWriteInterval="30s" PerfCounterWriteInterval="30s" LogWriteInterval="300s" WriteLogStatisticsToTable="true"/>
   </Defaults>
   <Override Node="Primary">
     <Networking Address="localhost" Port="11111" />

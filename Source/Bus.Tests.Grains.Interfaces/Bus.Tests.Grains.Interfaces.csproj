@@ -53,9 +53,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Bus.Observables\Bus.Observables.csproj">
       <Project>{ebb46e7e-96f5-41b7-9bbf-155b540a543b}</Project>
       <Name>Bus.Observables</Name>

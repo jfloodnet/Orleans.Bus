@@ -4,6 +4,9 @@ using System.Threading;
 
 using NUnit.Framework;
 
+using Orleans.Bus;
+[assembly: OrleansSiloForTestingAction]
+
 namespace Orleans.Bus
 {
     [TestFixture]

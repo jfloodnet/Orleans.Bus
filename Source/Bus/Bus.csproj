@@ -66,9 +66,6 @@
     <Compile Include="Timers.cs" />
     <Compile Include="Persistence.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Packages.config" />
-  </ItemGroup>
   <PropertyGroup>
     <OrleansProjectType>Client</OrleansProjectType>
   </PropertyGroup>
