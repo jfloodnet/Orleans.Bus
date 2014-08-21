@@ -44,8 +44,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\ProductAssemblyInfo.cs">
-      <Link>Properties\ProductAssemblyInfo.cs</Link>
+    <Compile Include="..\Bus.Version.cs">
+      <Link>Properties\Bus.Version.cs</Link>
+    </Compile>
+    <Compile Include="..\Product.cs">
+      <Link>Properties\Product.cs</Link>
     </Compile>
     <Compile Include="Activation.cs" />
     <Compile Include="Attributes.cs" />

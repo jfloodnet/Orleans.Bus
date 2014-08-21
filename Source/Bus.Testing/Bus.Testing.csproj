@@ -38,8 +38,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\ProductAssemblyInfo.cs">
-      <Link>Properties\ProductAssemblyInfo.cs</Link>
+    <Compile Include="..\Bus.Testing.Version.cs">
+      <Link>Properties\Bus.Testing.Version.cs</Link>
+    </Compile>
+    <Compile Include="..\Product.cs">
+      <Link>Properties\Product.cs</Link>
     </Compile>
     <Compile Include="ActivationMock.cs" />
     <Compile Include="Expectations.cs" />

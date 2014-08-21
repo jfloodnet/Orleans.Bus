@@ -43,8 +43,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\ProductAssemblyInfo.cs">
-      <Link>Properties\ProductAssemblyInfo.cs</Link>
+    <Compile Include="..\Bus.Reactive.Version.cs">
+      <Link>Properties\Bus.Reactive.Version.cs</Link>
+    </Compile>
+    <Compile Include="..\Product.cs">
+      <Link>Properties\Product.cs</Link>
     </Compile>
     <Compile Include="ReactiveNotification.cs" />
     <Compile Include="ReactiveObservableProxy.cs" />

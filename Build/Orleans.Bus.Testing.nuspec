@@ -11,7 +11,7 @@
     <description>Connvinient unit testing infrastructure for projects based on Orleans.Bus</description>
     <tags>Orleans messaging bus actor concurrency CQRS unit testing mocks</tags>
     <dependencies>
-        <dependency id="Orleans.Bus" version="$version$" />
+        <dependency id="Orleans.Bus" version="$bus_version$" />
     </dependencies>      
   </metadata>
   <files>

@@ -9,9 +9,15 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Diagnostics;
 
-const string Project = "Orleans.Bus";
+const string MainProject = "Orleans.Bus";
+const string TestingProject = "Orleans.Bus.Testing";
+const string ReactiveProject = "Orleans.Bus.Reactive";
+
 const string RootPath = "$NakeScriptDirectory$";
 const string OutputPath = RootPath + @"\Output";
+
+var PackagePath = @"{OutputPath}\Package";
+var ReleasePath = @"{PackagePath}\Release";
 
 /// Builds sources in Debug mode
 [Task] void Default()
@@ -31,7 +37,7 @@ const string OutputPath = RootPath + @"\Output";
 {
     Clean(outDir);
 
-    MSBuild("{Project}.sln", 
+    MSBuild("{MainProject}.sln", 
             "Configuration={config};OutDir={outDir};ReferencePath={outDir}");
 }
 
@@ -44,42 +50,51 @@ const string OutputPath = RootPath + @"\Output";
     Cmd(@"Packages\NUnit.Runners.2.6.3\tools\nunit-console.exe /framework:net-4.0 /noshadow /nologo {tests}");
 }
 
-/// Builds official NuGet package 
+/// Builds official NuGet packages 
 [Step] void Package()
 {
-    var packagePath = OutputPath + @"\Package";
-    var releasePath = packagePath + @"\Release";
+    Test(@"{PackagePath}\Debug");
+    Build("Release", ReleasePath);
 
-    Test(packagePath + @"\Debug");
-    Build("Release", releasePath);
-
-	var version = FileVersionInfo
-			.GetVersionInfo(@"{releasePath}\{Project}.dll")
-			.FileVersion;
-
-	Cmd(@"Tools\Nuget.exe pack Build\{Project}.nuspec -Version {version} " +
-		 "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
-
-    Cmd(@"Tools\Nuget.exe pack Build\{Project}.Reactive.nuspec -Version {version} " +
-         "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
-	
-    Cmd(@"Tools\Nuget.exe pack Build\{Project}.Testing.nuspec -Version {version} " +
-		 "-OutputDirectory {packagePath} -BasePath {RootPath} -NoPackageAnalysis");
+    Pack(MainProject);
+    Pack(ReactiveProject, "bus_version={Version(MainProject)}");
+    Pack(TestingProject,  "bus_version={Version(MainProject)}");
 }
 
-/// Installs dependencies (packages) from NuGet 
-[Task] void Install()
+void Pack(string project, string properties = null)
 {
-    var packagesDir = @"{RootPath}\Packages";
+    Cmd(@"Tools\Nuget.exe pack Build\{project}.nuspec -Version {Version(project)} " +
+         "-OutputDirectory {PackagePath} -BasePath {RootPath} -NoPackageAnalysis " + 
+         (properties != null ? "-Properties {properties}" : ""));
+}
 
-    var configs = XElement
-        .Load(packagesDir + @"\repositories.config")
-        .Descendants("repository")
-        .Select(x => x.Attribute("path").Value.Replace("..", RootPath)); 
+/// Publishes package to NuGet gallery
+[Step] void Publish(string project)
+{
+    switch (project)
+    {
+        case "bus": 
+            Push(MainProject); 
+            break;
+        case "reactive": 
+            Push(ReactiveProject); 
+            break;
+        case "testing": 
+            Push(TestingProject); 
+            break;
+        default:
+            throw new ArgumentException("Available values are: bus, reactive or testing");   
+    }
+}
 
-    foreach (var config in configs)
-        Cmd(@"Tools\NuGet.exe install {config} -o {packagesDir}");
+void Push(string project)
+{
+    Cmd(@"Tools\Nuget.exe push {PackagePath}\{project}.{Version(project)}.nupkg $NuGetApiKey$");
+}
 
-	// install packages required for building/testing/publishing package
-    Cmd(@"Tools\NuGet.exe install Build/Packages.config -o {packagesDir}");
+string Version(string project)
+{
+    return FileVersionInfo
+            .GetVersionInfo(@"{ReleasePath}\{project}.dll")
+            .FileVersion;
 }

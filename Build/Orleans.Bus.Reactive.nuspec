@@ -11,7 +11,7 @@
     <description>Reactive Extensions support for Orleans.Bus</description>
     <tags>Orleans messaging bus actor concurrency CQRS reactive RX</tags>
     <dependencies>
-        <dependency id="Orleans.Bus" version="$version$" />
+        <dependency id="Orleans.Bus" version="$bus_version$" />
         <dependency id="RX-Main" version="1.0.11226" />
     </dependencies>      
   </metadata>
