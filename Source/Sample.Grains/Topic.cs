@@ -8,8 +8,8 @@ using Orleans.Bus;
 
 namespace Sample
 {
-    [StorageProvider(ProviderName = "TopicStore")]
-    public class TopicGrain : PocoGrain<int, int, int>, ITopic
+    [StorageProvider(ProviderName = "TopicStorageProvider")]
+    public class TopicGrain : PocoGrain<TopicState>, ITopic
     {
         Topic topic;
 
@@ -22,10 +22,11 @@ namespace Sample
                     Bus = Bus, 
                     Timers = Timers, 
                     Reminders = Reminders,
+                    State = State,
                     Storage = Storage
                 };
 
-                return topic.Activate();
+                return TaskDone.Done;
             };
 
             OnCommand = command => topic.Handle((dynamic)command);
@@ -42,30 +43,18 @@ namespace Sample
         public IMessageBus Bus;
         public ITimerCollection Timers;
         public IReminderCollection Reminders;
-        public IStorageProviderProxy<int, int, int> Storage;
+        public IStateStorage Storage;
+        public TopicState State;
 
         const int MaxRetries = 3;
         static readonly TimeSpan RetryPeriod = TimeSpan.FromSeconds(5);
         readonly IDictionary<string, int> retrying = new Dictionary<string, int>();
 
-        public string Query
-        {
-            get; private set;
-        }
-
-        public int Total
-        {
-            get; private set;
-        }
-
-        public async Task Activate()
-        {
-            Total = await Storage.ReadStateAsync();
-        }
+        string query;
 
         public async Task Handle(CreateTopic cmd)
         {
-            Query = cmd.Query;
+            query = cmd.Query;
 
             foreach (var entry in cmd.Schedule)
                 await Reminders.Register(entry.Key, TimeSpan.Zero, entry.Value);
@@ -139,8 +128,13 @@ namespace Sample
 
         async Task Search(string api)
         {
-            Total += await Bus.Query<int>(api, new Search(Query));
-            await Storage.WriteStateAsync(Total);
+            State.Total += await Bus.Query<int>(api, new Search(query));
+            await Storage.WriteStateAsync();
         }
+    }
+
+    public class TopicState
+    {
+        public int Total { get; set; }
     }
 }

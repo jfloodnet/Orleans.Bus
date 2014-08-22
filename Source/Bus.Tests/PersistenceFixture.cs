@@ -5,132 +5,68 @@ using NUnit.Framework;
 
 namespace Orleans.Bus
 {
-    namespace Persistence.GenericState
+    [TestFixture]
+    public class PersistenceFixture
     {
-        [TestFixture]
-        public class PersistenceFixture
+        IMessageBus bus;
+
+        [SetUp]
+        public void SetUp()
         {
-            IMessageBus bus;
-
-            [SetUp]
-            public void SetUp()
-            {
-                bus = MessageBus.Instance;
-                MockStorageProvider.Reset();
-            }
-
-            [Test]
-            public async void Scratch_state()
-            {
-                MockStorageProvider.ReadStateReturnValue = 0;
-
-                var result = await bus.Query<int>("p1", new GetValue());
-                Assert.That(result, Is.EqualTo(0));
-
-                Assert.That(MockStorageProvider.ReadStateGrainId,
-                            Is.EqualTo("p1"));
-
-                Assert.That(MockStorageProvider.ReadStateGrainType,
-                            Is.EqualTo(typeof(TestGenericStatePersistentGrain).FullName));
-            }
-
-            [Test]
-            public async void Write_state()
-            {
-                await bus.Send("p2", new SetValue{Value = 2});
-
-                var result = await bus.Query<int>("p2", new GetValue());
-                Assert.That(result, Is.EqualTo(2));
-
-                Assert.That(MockStorageProvider.WriteStatePassedValue,
-                            Is.EqualTo(2));
-
-                Assert.That(MockStorageProvider.WriteStateGrainId,
-                            Is.EqualTo("p2"));
-
-                Assert.That(MockStorageProvider.WriteStateGrainType,
-                            Is.EqualTo(typeof(TestGenericStatePersistentGrain).FullName));
-            }
-
-            [Test]
-            public async void Clear_state()
-            {
-                await bus.Send("p3", new SetValue{Value = 3});
-                await bus.Send("p3", new ClearValue());
-
-                var result = await bus.Query<int>("p3", new GetValue());
-                Assert.That(result, Is.EqualTo(-1));
-
-                Assert.That(MockStorageProvider.ClearStatePassedValue,
-                            Is.EqualTo(3));
-
-                Assert.That(MockStorageProvider.ClearStateGrainId,
-                            Is.EqualTo("p3"));
-
-                Assert.That(MockStorageProvider.ClearStateGrainType,
-                            Is.EqualTo(typeof(TestGenericStatePersistentGrain).FullName));
-            }
+            bus = MessageBus.Instance;
+            MockStorageProvider.Reset();
         }
-    }    
-    
-    namespace Persistence.ExplicitStatePassing
-    {
-        [TestFixture]
-        public class PersistenceFixture
+
+        [Test]
+        public async void Scratch_state()
         {
-            IMessageBus bus;
+            MockStorageProvider.ReadStateReturnValue = 0;
 
-            [SetUp]
-            public void SetUp()
-            {
-                bus = MessageBus.Instance;
-                MockStorageProvider.Reset();
-            }
+            var result = await bus.Query<int>("p1", new GetValue());
+            Assert.That(result, Is.EqualTo(0));
 
-            [Test]
-            public async void Scratch_state()
-            {
-                MockStorageProvider.ReadStateReturnValue = 0;
+            Assert.That(MockStorageProvider.ReadStateGrainId,
+                        Is.EqualTo("p1"));
 
-                var result = await bus.Query<int>("p1", new GetValue());
-                Assert.That(result, Is.EqualTo(0));
+            Assert.That(MockStorageProvider.ReadStateGrainType,
+                        Is.EqualTo(typeof(TestPersistentGrain).FullName));
+        }
 
-                Assert.That(MockStorageProvider.ReadStateGrainId,
-                            Is.EqualTo("p1"));
+        [Test]
+        public async void Write_state()
+        {
+            await bus.Send("p2", new SetValue{Value = 2});
 
-                Assert.That(MockStorageProvider.ReadStateGrainType,
-                            Is.EqualTo(typeof(TestExplicitStatePassingPersistentGrain).FullName));
-            }
+            var result = await bus.Query<int>("p2", new GetValue());
+            Assert.That(result, Is.EqualTo(2));
 
-            [Test]
-            public async void Write_state()
-            {
-                await bus.Send("p2", new SetValue{Value = 2});
+            Assert.That(MockStorageProvider.WriteStatePassedValue,
+                        Is.EqualTo(2));
 
-                Assert.That(MockStorageProvider.WriteStatePassedValue,
-                            Is.EqualTo(2));
+            Assert.That(MockStorageProvider.WriteStateGrainId,
+                        Is.EqualTo("p2"));
 
-                Assert.That(MockStorageProvider.WriteStateGrainId,
-                            Is.EqualTo("p2"));
+            Assert.That(MockStorageProvider.WriteStateGrainType,
+                        Is.EqualTo(typeof(TestPersistentGrain).FullName));
+        }
 
-                Assert.That(MockStorageProvider.WriteStateGrainType,
-                            Is.EqualTo(typeof(TestExplicitStatePassingPersistentGrain).FullName));
-            }
+        [Test]
+        public async void Clear_state()
+        {
+            await bus.Send("p3", new SetValue{Value = 3});
+            await bus.Send("p3", new ClearValue());
 
-            [Test]
-            public async void Clear_state()
-            {
-                await bus.Send("p3", new ClearValue());
+            var result = await bus.Query<int>("p3", new GetValue());
+            Assert.That(result, Is.EqualTo(-1));
 
-                Assert.That(MockStorageProvider.ClearStatePassedValue,
-                            Is.EqualTo(-1));
+            Assert.That(MockStorageProvider.ClearStatePassedValue,
+                        Is.EqualTo(3));
 
-                Assert.That(MockStorageProvider.ClearStateGrainId,
-                            Is.EqualTo("p3"));
+            Assert.That(MockStorageProvider.ClearStateGrainId,
+                        Is.EqualTo("p3"));
 
-                Assert.That(MockStorageProvider.ClearStateGrainType,
-                            Is.EqualTo(typeof(TestExplicitStatePassingPersistentGrain).FullName));
-            }
+            Assert.That(MockStorageProvider.ClearStateGrainType,
+                        Is.EqualTo(typeof(TestPersistentGrain).FullName));
         }
     }
-}
+}    

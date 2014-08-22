@@ -13,7 +13,7 @@ namespace Sample
     /// <summary>
     /// Based on: https://github.com/OrleansContrib/OrleansBlobStorageProvider
     /// </summary>
-    public class TopicStorageProvider : StorageProvider<int, int, int>
+    public class TopicStorageProvider : StorageProvider<TopicState>
     {
         CloudBlobContainer container;
 
@@ -26,26 +26,26 @@ namespace Sample
             return container.CreateIfNotExistsAsync();
         }
 
-        public override async Task<int> ReadStateAsync(string id, GrainType type)
+        public override async Task ReadStateAsync(string id, GrainType type, TopicState state)
         {
             var blob = container.GetBlockBlobReference(GetBlobName(type, id));
             if (!(await blob.ExistsAsync()))
-                return 0;
+                return;
 
             var contents = await blob.DownloadTextAsync();
             if (string.IsNullOrWhiteSpace(contents))
-                return 0;
+                return;
 
-            return int.Parse(contents);
+            state.Total = int.Parse(contents);
         }
 
-        public override Task WriteStateAsync(string id, GrainType type, int total)
+        public override Task WriteStateAsync(string id, GrainType type, TopicState state)
         {
             var blob = container.GetBlockBlobReference(GetBlobName(type, id));
-            return blob.UploadTextAsync(total.ToString(CultureInfo.InvariantCulture));
+            return blob.UploadTextAsync(state.Total.ToString(CultureInfo.InvariantCulture));
         }
 
-        public override Task ClearStateAsync(string id, GrainType type, int total)
+        public override Task ClearStateAsync(string id, GrainType type, TopicState state)
         {
             var blob = container.GetBlockBlobReference(GetBlobName(type, id));
             return blob.DeleteIfExistsAsync();

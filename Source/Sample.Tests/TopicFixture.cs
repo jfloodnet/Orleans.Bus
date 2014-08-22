@@ -18,7 +18,8 @@ namespace Sample
         const string subject = "ПТН ПНХ";
         Dictionary<string, TimeSpan> schedule;
 
-        StorageProviderProxyMock<int, int, int> storage;
+        TopicState state;
+        StateStorageMock storage;
         
         [SetUp]
         public override void SetUp()
@@ -30,13 +31,14 @@ namespace Sample
                 {"facebook", TimeSpan.FromMinutes(10)},
                 {"twitter",  TimeSpan.FromMinutes(5)},
             };
-
+            
             topic = new Topic
             {
                 Bus = Bus,
                 Timers = Timers,
                 Reminders = Reminders,
-                Storage = storage = new StorageProviderProxyMock<int, int, int>()
+                Storage = storage = new StateStorageMock(),
+                State = state = new TopicState()
             };
         }
 
@@ -89,7 +91,7 @@ namespace Sample
             await ReceiveReminder("facebook");
 
             // assert
-            IsTrue(()=> topic.Total == 100 * 2);
+            IsTrue(()=> topic.State.Total == 100 * 2);
         }
 
         [Test]
@@ -98,9 +100,8 @@ namespace Sample
             // arrange
             await TopicCreated();
 
-            const int result = 100;
             Expect("facebook", Query<Search>()
-                .Return(result));
+                .Return(100));
 
             // act
             await ReceiveReminder("facebook");
@@ -108,12 +109,8 @@ namespace Sample
 
             // assert
             IsTrue(() => storage.Recorded.Count == 2);
-
-            IsTrue(() => storage.Recorded.ElementAt(0).IsWriteState && 
-                         storage.Recorded.ElementAt(0).Argument<int>() == result);
-            
-            IsTrue(() => storage.Recorded.ElementAt(1).IsWriteState && 
-                         storage.Recorded.ElementAt(0).Argument<int>() == result);
+            IsTrue(() => storage.Recorded.ElementAt(0).IsWriteState);
+            IsTrue(() => storage.Recorded.ElementAt(1).IsWriteState);
         }
 
         [Test]

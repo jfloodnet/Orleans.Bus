@@ -5,247 +5,127 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    namespace Persistence.GenericState
+    public class MockStorageProvider : StorageProvider<TestPersistentState>
     {
-        public class MockStorageProvider : StorageProvider<int>
+        public MockStorageProvider()
         {
-            public MockStorageProvider()
-            {
-                Reset();
-            }
-
-            public static string ReadStateGrainId
-            {
-                get { return GetEnv("ReadStateGrainId"); }
-                set { SetEnv("ReadStateGrainId", value); }
-            }
-
-            public static string ReadStateGrainType
-            {
-                get { return GetEnv("ReadStateGrainType"); }
-                set { SetEnv("ReadStateGrainType", value); }
-            }
-
-            public static int ReadStateReturnValue
-            {
-                get { return int.Parse(GetEnv("ReadStateReturnValue")); }
-                set { SetEnv("ReadStateReturnValue", value.ToString()); }
-            }
-
-            public static string WriteStateGrainId
-            {
-                get { return GetEnv("WriteStateGrainId"); }
-                set { SetEnv("WriteStateGrainId", value); }
-            }
-
-            public static string WriteStateGrainType
-            {
-                get { return GetEnv("WriteStateGrainType"); }
-                set { SetEnv("WriteStateGrainType", value); }
-            }
-
-            public static int WriteStatePassedValue
-            {
-                get { return int.Parse(GetEnv("WriteStatePassedValue")); }
-                set { SetEnv("WriteStatePassedValue", value.ToString()); }
-            }
-
-            public static string ClearStateGrainId
-            {
-                get { return GetEnv("ClearStateGrainId"); }
-                set { SetEnv("ClearStateGrainId", value); }
-            }
-
-            public static string ClearStateGrainType
-            {
-                get { return GetEnv("ClearStateGrainType"); }
-                set { SetEnv("ClearStateGrainType", value); }
-            }
-
-            public static int ClearStatePassedValue
-            {
-                get { return int.Parse(GetEnv("ClearStatePassedValue")); }
-                set { SetEnv("ClearStatePassedValue", value.ToString()); }
-            }
-
-            public static int DefaultValue
-            {
-                get { return int.Parse(GetEnv("DefaultValue")); }
-                set { SetEnv("DefaultValue", value.ToString()); }
-            }
-
-            static string GetEnv(string name)
-            {
-                return Environment.GetEnvironmentVariable("GenericState." + name);
-            }
-
-            static void SetEnv(string name, string value)
-            {
-                Environment.SetEnvironmentVariable("GenericState." + name, value);
-            }
-
-            public static void Reset()
-            {
-                ReadStateReturnValue =
-                    WriteStatePassedValue =
-                    ClearStatePassedValue = -1;
-
-                ReadStateGrainId =
-                    WriteStateGrainId =
-                    ClearStateGrainId = "";
-
-                ReadStateGrainType =
-                    WriteStateGrainType =
-                    ClearStateGrainType = "";
-            }
-
-            public override Task Init(Dictionary<string, string> properties)
-            {
-                DefaultValue = int.Parse(properties["DefaultValue"]);
-                ReadStateReturnValue = DefaultValue;
-                return TaskDone.Done;
-            }
-
-            public override Task<int> ReadStateAsync(string grainId, GrainType grainType)
-            {
-                ReadStateGrainId = grainId;
-                ReadStateGrainType = grainType.FullName;
-                return Task.FromResult(ReadStateReturnValue);
-            }
-
-            public override Task WriteStateAsync(string grainId, GrainType grainType, int grainState)
-            {
-                WriteStateGrainId = grainId;
-                WriteStateGrainType = grainType.FullName;
-                WriteStatePassedValue = grainState;
-                return TaskDone.Done;
-            }
-
-            public override Task ClearStateAsync(string grainId, GrainType grainType, int grainState)
-            {
-                ClearStateGrainId = grainId;
-                ClearStateGrainType = grainType.FullName;
-                ClearStatePassedValue = grainState;
-                return TaskDone.Done;
-            }
+            Reset();
         }
-    }
 
-    namespace Persistence.ExplicitStatePassing
-    {
-        public class MockStorageProvider : StorageProvider<int, int, int>
+        public static string ReadStateGrainId
         {
-            public MockStorageProvider()
-            {
-                Reset();
-            }
+            get { return GetEnv("ReadStateGrainId"); }
+            set { SetEnv("ReadStateGrainId", value); }
+        }
 
-            public static string ReadStateGrainId
-            {
-                get { return GetEnv("ReadStateGrainId"); }
-                set { SetEnv("ReadStateGrainId", value); }
-            }
+        public static string ReadStateGrainType
+        {
+            get { return GetEnv("ReadStateGrainType"); }
+            set { SetEnv("ReadStateGrainType", value); }
+        }
 
-            public static string ReadStateGrainType
-            {
-                get { return GetEnv("ReadStateGrainType"); }
-                set { SetEnv("ReadStateGrainType", value); }
-            }
+        public static int ReadStateReturnValue
+        {
+            get { return int.Parse(GetEnv("ReadStateReturnValue")); }
+            set { SetEnv("ReadStateReturnValue", value.ToString()); }
+        }
 
-            public static int ReadStateReturnValue
-            {
-                get { return int.Parse(GetEnv("ReadStateReturnValue")); }
-                set { SetEnv("ReadStateReturnValue", value.ToString()); }
-            }
+        public static string WriteStateGrainId
+        {
+            get { return GetEnv("WriteStateGrainId"); }
+            set { SetEnv("WriteStateGrainId", value); }
+        }
 
-            public static string WriteStateGrainId
-            {
-                get { return GetEnv("WriteStateGrainId"); }
-                set { SetEnv("WriteStateGrainId", value); }
-            }
+        public static string WriteStateGrainType
+        {
+            get { return GetEnv("WriteStateGrainType"); }
+            set { SetEnv("WriteStateGrainType", value); }
+        }
 
-            public static string WriteStateGrainType
-            {
-                get { return GetEnv("WriteStateGrainType"); }
-                set { SetEnv("WriteStateGrainType", value); }
-            }
+        public static int WriteStatePassedValue
+        {
+            get { return int.Parse(GetEnv("WriteStatePassedValue")); }
+            set { SetEnv("WriteStatePassedValue", value.ToString()); }
+        }
 
-            public static int WriteStatePassedValue
-            {
-                get { return int.Parse(GetEnv("WriteStatePassedValue")); }
-                set { SetEnv("WriteStatePassedValue", value.ToString()); }
-            }
+        public static string ClearStateGrainId
+        {
+            get { return GetEnv("ClearStateGrainId"); }
+            set { SetEnv("ClearStateGrainId", value); }
+        }
 
-            public static string ClearStateGrainId
-            {
-                get { return GetEnv("ClearStateGrainId"); }
-                set { SetEnv("ClearStateGrainId", value); }
-            }
+        public static string ClearStateGrainType
+        {
+            get { return GetEnv("ClearStateGrainType"); }
+            set { SetEnv("ClearStateGrainType", value); }
+        }
 
-            public static string ClearStateGrainType
-            {
-                get { return GetEnv("ClearStateGrainType"); }
-                set { SetEnv("ClearStateGrainType", value); }
-            }
+        public static int ClearStatePassedValue
+        {
+            get { return int.Parse(GetEnv("ClearStatePassedValue")); }
+            set { SetEnv("ClearStatePassedValue", value.ToString()); }
+        }
 
-            public static int ClearStatePassedValue
-            {
-                get { return int.Parse(GetEnv("ClearStatePassedValue")); }
-                set { SetEnv("ClearStatePassedValue", value.ToString()); }
-            }
+        public static int DefaultValue
+        {
+            get { return int.Parse(GetEnv("DefaultValue")); }
+            set { SetEnv("DefaultValue", value.ToString()); }
+        }
 
-            static string GetEnv(string name)
-            {
-                return Environment.GetEnvironmentVariable("ExplicitStatePassing." + name);
-            }
+        static string GetEnv(string name)
+        {
+            return Environment.GetEnvironmentVariable("GenericState." + name);
+        }
 
-            static void SetEnv(string name, string value)
-            {
-                Environment.SetEnvironmentVariable("ExplicitStatePassing." + name, value);
-            }
+        static void SetEnv(string name, string value)
+        {
+            Environment.SetEnvironmentVariable("GenericState." + name, value);
+        }
 
-            public static void Reset()
-            {
-                ReadStateReturnValue =
-                    WriteStatePassedValue =
-                    ClearStatePassedValue = -1;
+        public static void Reset()
+        {
+            ReadStateReturnValue =
+                WriteStatePassedValue =
+                ClearStatePassedValue = -1;
 
-                ReadStateGrainId =
-                    WriteStateGrainId =
-                    ClearStateGrainId = "";
+            ReadStateGrainId =
+                WriteStateGrainId =
+                ClearStateGrainId = "";
 
-                ReadStateGrainType =
-                    WriteStateGrainType =
-                    ClearStateGrainType = "";
-            }
+            ReadStateGrainType =
+                WriteStateGrainType =
+                ClearStateGrainType = "";
+        }
 
-            public override Task Init(Dictionary<string, string> properties)
-            {
-                return TaskDone.Done;
-            }
+        public override Task Init(Dictionary<string, string> properties)
+        {
+            DefaultValue = int.Parse(properties["DefaultValue"]);
+            ReadStateReturnValue = DefaultValue;
+            return TaskDone.Done;
+        }
 
-            public override Task<int> ReadStateAsync(string grainId, GrainType grainType)
-            {
-                ReadStateGrainId = grainId;
-                ReadStateGrainType = grainType.FullName;
-                return Task.FromResult(ReadStateReturnValue);
-            }
+        public override Task ReadStateAsync(string id, GrainType type, TestPersistentState state)
+        {
+            ReadStateGrainId = id;
+            ReadStateGrainType = type.FullName;
+            state.Total = ReadStateReturnValue;
+            return TaskDone.Done;
+        }
 
-            public override Task WriteStateAsync(string grainId, GrainType grainType, int grainState)
-            {
-                WriteStateGrainId = grainId;
-                WriteStateGrainType = grainType.FullName;
-                WriteStatePassedValue = grainState;
-                return TaskDone.Done;
-            }
+        public override Task WriteStateAsync(string id, GrainType type, TestPersistentState state)
+        {
+            WriteStateGrainId = id;
+            WriteStateGrainType = type.FullName;
+            WriteStatePassedValue = state.Total;
+            return TaskDone.Done;
+        }
 
-            public override Task ClearStateAsync(string grainId, GrainType grainType, int grainState)
-            {
-                ClearStateGrainId = grainId;
-                ClearStateGrainType = grainType.FullName;
-                ClearStatePassedValue = grainState;
-                return TaskDone.Done;
-            }
+        public override Task ClearStateAsync(string id, GrainType type, TestPersistentState state)
+        {
+            ClearStateGrainId = id;
+            ClearStateGrainType = type.FullName;
+            ClearStatePassedValue = state.Total;
+            return TaskDone.Done;
         }
     }
 }

@@ -318,7 +318,7 @@ namespace Orleans.Bus
         }
 
         /// <summary>
-        /// Gets or set state holder. By default it's initialized to the one created by Orleans runtime.
+        /// Gets or sets current instance of state holder. By default it's initialized to the one created by Orleans runtime.
         /// </summary>
         /// <value>
         /// The holder.
@@ -340,7 +340,7 @@ namespace Orleans.Bus
         /// <remarks>
         /// Could be substiuted for unit-testing purposes
         /// </remarks>
-        public IStorageProviderProxy Storage
+        public IStateStorage Storage
         {
             get; set;
         }
@@ -354,68 +354,11 @@ namespace Orleans.Bus
         public override Task ActivateAsync()
         {
             Holder = Holder ?? base.State;
-            Storage = Storage ?? new DefaultStorageProviderProxy(base.State);
+            Storage = Storage ?? new DefaultStateStorage(base.State);
             return TaskDone.Done;
         }
     }   
     
-    /// <summary>
-    /// Base class for persistent message-based grains with explicit state passing to/from storage provider
-    /// </summary>
-    /// <remarks>
-    /// Due to current implementatio, which clears shared operation context object after every storage operation completes, 
-    /// grains inherited from this type cannot be reentrant!
-    /// </remarks>
-    /// <typeparam name="TReadStateResult">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ReadStateAsync"/> operation result.</typeparam>
-    /// <typeparam name="TWriteStateArgument">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.WriteStateAsync"/> operation argument.</typeparam>
-    /// <typeparam name="TClearStateArgument">The type of <see cref="IStorageProviderProxy{TReadStateResult,TWriteStateArgument,TClearStateArgument}.ClearStateAsync"/> operation argument.</typeparam>
-    public abstract class MessageBasedGrain<TReadStateResult, TWriteStateArgument, TClearStateArgument>
-       : MessageBasedGrainBase<IStateHolder<OperationContext<TReadStateResult, TWriteStateArgument, TClearStateArgument>>>
-    {
-        /// <summary>
-        /// Default constructor, which initialize all local services to runtime-bound implementations by default.
-        /// </summary>
-        protected MessageBasedGrain()            
-        {
-            if (GetType().GetCustomAttributes(typeof(ReentrantAttribute), true).Length > 0)
-                throw new NotSupportedException("Grains inherited from this type cannot be reentrant!");
-        }
-
-        /// <summary>
-        /// PROHIBITED MEMBER!
-        /// </summary>
-        public new object State
-        {
-            get { throw new InvalidOperationException("Use imperative methods on provided Storage object to read/write/clear state"); }
-        }
-
-        /// <summary>
-        /// Gets or sets current instance of storage provider proxy for controlling state checkpointing
-        /// </summary>
-        /// <value>
-        /// The storage.
-        /// </value>
-        /// <remarks>
-        /// Could be substituted for unit-testing purposes
-        /// </remarks>
-        public IStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument> Storage
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// This method is called at the end of the process of activating a grain.
-        /// It is called before any messages have been dispatched to the grain.
-        /// For grains with declared persistent state, this method is called after the State property has been populated.
-        /// </summary>
-        /// <returns></returns>
-        public override Task ActivateAsync()
-        {
-            Storage = Storage ?? new DefaultStorageProviderProxy<TReadStateResult, TWriteStateArgument, TClearStateArgument>(base.State);
-            return TaskDone.Done;
-        }
-    }
-
     interface IExposeGrainInternals
     {
         void DeactivateOnIdle();
