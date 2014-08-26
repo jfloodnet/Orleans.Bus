@@ -54,7 +54,7 @@ namespace Orleans.Bus
         {
             Bus = MessageBus.Instance;
             Id  = () => Identity.Of(this);
-            Timers = new TimerCollection(this);
+            Timers = new TimerCollection(this, Id, Bus);
             Reminders = new ReminderCollection(this);
             Observers = new ObserverCollection();
             Activation = new Activation(this);
@@ -181,7 +181,7 @@ namespace Orleans.Bus
         {
             Bus = MessageBus.Instance;
             Id = () => Identity.Of(this);
-            Timers = new TimerCollection(this);
+            Timers = new TimerCollection(this, Id, Bus);
             Reminders = new ReminderCollection(this);
             Observers = new ObserverCollection();
             Activation = new Activation(this);

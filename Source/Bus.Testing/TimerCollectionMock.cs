@@ -12,17 +12,27 @@ namespace Orleans.Bus
 
         void ITimerCollection.Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
-            recorded.Add(new RecordedTimer(id, callback, due, period));
+            recorded.Add(new RecordedCallbackTimer(id, callback, due, period));
         }
 
         void ITimerCollection.Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
-            recorded.Add(new RecordedTimer<TState>(id, callback, state, due, period));
+            recorded.Add(new RecordedCallbackTimer<TState>(id, callback, state, due, period));
+        }
+
+        public void Register<TCommand>(TimeSpan due, TimeSpan period, TCommand command)
+        {
+            recorded.Add(new RecordedCommandTimer(command, due, period));
         }
 
         void ITimerCollection.Unregister(string id)
         {
             recorded.RemoveAll(x => x.Id == id);
+        }
+
+        public void Unregister<TCommand>()
+        {
+            ((ITimerCollection)this).Unregister(typeof(TCommand).FullName);
         }
 
         bool ITimerCollection.IsRegistered(string id)
@@ -61,32 +71,52 @@ namespace Orleans.Bus
         }
     }
 
-    public class RecordedTimer
+    public abstract class RecordedTimer
     {
         public readonly string Id;
-        public readonly Func<Task> Callback;
         public readonly TimeSpan Due;
         public readonly TimeSpan Period;
 
-        public RecordedTimer(string id, Func<Task> callback, TimeSpan due, TimeSpan period)
+        public RecordedTimer(string id, TimeSpan due, TimeSpan period)
         {
             Id = id;
-            Callback = callback;
             Due = due;
             Period = period;
         }
     }
-
-    public class RecordedTimer<TState> : RecordedTimer
+    
+    public class RecordedCallbackTimer: RecordedTimer
     {
-        public new readonly Func<TState, Task> Callback;
+        public readonly Func<Task> Callback;
+
+        public RecordedCallbackTimer(string id, Func<Task> callback, TimeSpan due, TimeSpan period)
+            : base(id, due, period)
+        {
+            Callback = callback;
+        }
+    }
+
+    public class RecordedCallbackTimer<TState> : RecordedTimer
+    {
+        public readonly Func<TState, Task> Callback;
         public readonly TState State;
 
-        public RecordedTimer(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period)
-            : base(id, null, due, period)
+        public RecordedCallbackTimer(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period)
+            : base(id, due, period)
         {
             Callback = callback;
             State = state;
+        }
+    }
+
+    public class RecordedCommandTimer : RecordedTimer
+    {
+        public readonly object Command;
+
+        public RecordedCommandTimer(object command, TimeSpan due, TimeSpan period)
+            : base(command.GetType().FullName, due, period)
+        {
+            Command = command;
         }
     }
 }

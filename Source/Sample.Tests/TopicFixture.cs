@@ -126,7 +126,7 @@ namespace Sample
             await ReceiveReminder("facebook");           
 
             // assert
-            var scheduled = Timer<string>("facebook");
+            var scheduled = CallbackTimer<string>("facebook");
             IsTrue(()=> scheduled.State == "facebook");
             IsTrue(()=> scheduled.Callback == topic.RetrySearch);
             IsTrue(()=> scheduled.Due == RetryPeriod);

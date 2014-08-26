@@ -90,9 +90,14 @@ namespace Sample
             Bus.Expect(destination, expectation);
         }
 
-        protected RecordedTimer<TState> Timer<TState>(string id)
+        protected RecordedCallbackTimer<TState> CallbackTimer<TState>(string id)
         {
-            return (RecordedTimer<TState>) Timers[id];
+            return (RecordedCallbackTimer<TState>) Timers[id];
+        }        
+        
+        protected RecordedCallbackTimer CallbackTimer(string id)
+        {
+            return (RecordedCallbackTimer) Timers[id];
         }
 
         protected RecordedReminder Reminder(string api)

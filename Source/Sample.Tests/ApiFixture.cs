@@ -42,7 +42,7 @@ namespace Sample
             IsTrue(()=> notifications[0].Available == false);
             IsTrue(()=> Timers.Count() == 1);
 
-            var timer = Timers[0];
+            var timer = CallbackTimer("check");
             IsTrue(() => timer.Callback == api.CheckAvailability);
             IsTrue(() => timer.Due == TimeSpan.FromSeconds(1));
             IsTrue(() => TimeSpan.FromSeconds(1) <= timer.Period && timer.Period <= TimeSpan.FromSeconds(3));

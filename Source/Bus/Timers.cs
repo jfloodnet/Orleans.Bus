@@ -66,10 +66,23 @@ namespace Orleans.Bus
         void Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback);
 
         /// <summary>
+        /// Registers command timer which will exhibit non-interleaved semantics
+        /// </summary>
+        /// <param name="due">Due time for first timer tick.</param>
+        /// <param name="period">Period of subsequent timer ticks.</param>
+        /// <param name="command">The command to be dispatched on timer callback</param>
+        void Register<TCommand>(TimeSpan due, TimeSpan period, TCommand command);
+
+        /// <summary>
         /// Unregister previously registered timer. 
         /// </summary>
         /// <param name="id">Unique id of the timer</param>
         void Unregister(string id);
+
+        /// <summary>
+        /// Unregister previously registered command timer. 
+        /// </summary>
+        void Unregister<TCommand>();
 
         /// <summary>
         /// Checks whether timer with the given name was registered before
@@ -89,28 +102,29 @@ namespace Orleans.Bus
     {
         readonly IDictionary<string, IOrleansTimer> timers = new Dictionary<string, IOrleansTimer>();
         readonly IExposeGrainInternals grain;
-        readonly bool synchronize;
+        readonly Func<string> identity;
+        readonly IMessageBus bus;
 
-        public TimerCollection(IExposeGrainInternals grain)
+        public TimerCollection(IExposeGrainInternals grain, Func<string> identity, IMessageBus bus)
         {
             this.grain  = grain;
-            synchronize = grain
-                .GetType()
-                .GetCustomAttribute<ReentrantAttribute>() == null;
+            this.identity = identity;
+            this.bus = bus;
         }
 
         public void Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(
-                s => synchronize ? Task.Factory.StartNew(callback) : callback(), 
-                null, due, period));
+            timers.Add(id, grain.RegisterTimer(s => callback(), null, due, period));
         }
 
         public void Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(
-                s => synchronize ? Task.Factory.StartNew(() => callback((TState)s)) : callback((TState)s), 
-                state, due, period));
+            timers.Add(id, grain.RegisterTimer(s => callback((TState)s), state, due, period));
+        }
+
+        public void Register<TCommand>(TimeSpan due, TimeSpan period, TCommand command)
+        {
+            Register(typeof(TCommand).FullName, due, period, command, CommandTimerCallback);
         }
 
         public void Unregister(string id)
@@ -118,6 +132,11 @@ namespace Orleans.Bus
             var timer = timers[id];
             timers.Remove(id);
             timer.Dispose();            
+        }        
+        
+        public void Unregister<TCommand>()
+        {
+            Unregister(typeof(TCommand).FullName);
         }
 
         public bool IsRegistered(string id)
@@ -128,6 +147,11 @@ namespace Orleans.Bus
         public IEnumerable<string> Registered()
         {
             return timers.Keys;
+        }
+
+        Task CommandTimerCallback<TCommand>(TCommand command)
+        {
+            return bus.Send(identity(), command);
         }
     }
 }
