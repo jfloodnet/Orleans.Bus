@@ -10,12 +10,12 @@ namespace Orleans.Bus
     {
         readonly List<RecordedTimer> recorded = new List<RecordedTimer>();
 
-        void ITimerCollection.Register(string id, Func<Task> callback, TimeSpan due, TimeSpan period)
+        void ITimerCollection.Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
             recorded.Add(new RecordedTimer(id, callback, due, period));
         }
 
-        void ITimerCollection.Register<TState>(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period)
+        void ITimerCollection.Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
             recorded.Add(new RecordedTimer<TState>(id, callback, state, due, period));
         }

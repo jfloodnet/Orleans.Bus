@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Orleans.Bus
@@ -31,6 +32,12 @@ namespace Orleans.Bus
         /// </para>
         /// 
         /// <para>
+        /// Also if grain is not marked as <see cref="ReentrantAttribute"/>
+        ///             the callback invocation will be synchronized and will be conform to usual turn based execution semantics
+        /// 
+        /// </para>
+        /// 
+        /// <para>
         /// The timer may be stopped at any time by calling the <see cref="Unregister(string)"/> method
         /// 
         /// </para>
@@ -43,20 +50,20 @@ namespace Orleans.Bus
         /// 
         /// </remarks>
         /// <param name="id">Unique id of the timer</param>
-        /// <param name="callback">Callback function to be invoked when timer ticks.</param>
         /// <param name="due">Due time for first timer tick.</param>
         /// <param name="period">Period of subsequent timer ticks.</param>
-        void Register(string id, Func<Task> callback, TimeSpan due, TimeSpan period);
-        
+        /// <param name="callback">Callback function to be invoked when timer ticks.</param>
+        void Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback);
+
         /// <summary>
         /// Registers a timer to send periodic callbacks to this grain.
         /// </summary>
         /// <param name="id">Unique id of the timer</param>
-        /// <param name="callback">Callback function to be invoked when timer ticks.</param>
-        /// <param name="state">State object that will be passed as argument when calling the  <paramref name="callback"/>.</param>
         /// <param name="due">Due time for first timer tick.</param>
         /// <param name="period">Period of subsequent timer ticks.</param>
-        void Register<TState>(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period);
+        /// <param name="state">State object that will be passed as argument when calling the  <paramref name="callback"/>.</param>
+        /// <param name="callback">Callback function to be invoked when timer ticks.</param>
+        void Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback);
 
         /// <summary>
         /// Unregister previously registered timer. 
@@ -82,20 +89,28 @@ namespace Orleans.Bus
     {
         readonly IDictionary<string, IOrleansTimer> timers = new Dictionary<string, IOrleansTimer>();
         readonly IExposeGrainInternals grain;
+        readonly bool synchronize;
 
         public TimerCollection(IExposeGrainInternals grain)
         {
-            this.grain = grain;
+            this.grain  = grain;
+            synchronize = grain
+                .GetType()
+                .GetCustomAttribute<ReentrantAttribute>() == null;
         }
 
-        public void Register(string id, Func<Task> callback, TimeSpan due, TimeSpan period)
+        public void Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(s => callback(), null, due, period));
+            timers.Add(id, grain.RegisterTimer(
+                s => synchronize ? Task.Factory.StartNew(callback) : callback(), 
+                null, due, period));
         }
 
-        public void Register<TState>(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period)
+        public void Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(s => callback((TState)s), state, due, period));
+            timers.Add(id, grain.RegisterTimer(
+                s => synchronize ? Task.Factory.StartNew(() => callback((TState)s)) : callback((TState)s), 
+                state, due, period));
         }
 
         public void Unregister(string id)
