@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCommandTimerGrain.cs" />
+    <Compile Include="TestEnvelopeSupportGrain.cs" />
     <Compile Include="TestPersistentGrain.cs" />
     <Compile Include="TestPocoGrain.cs" />
   </ItemGroup>

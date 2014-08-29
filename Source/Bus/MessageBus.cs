@@ -24,6 +24,15 @@ namespace Orleans.Bus
         Task Send(string destination, object command);
 
         /// <summary>
+        /// Sends command message to the specified grain. This overload supports sending command envelopes.
+        /// </summary>
+        /// <param name="destination">Id of the destination grain</param>
+        /// <param name="command">Type of command message which will be sent</param>
+        /// <param name="message">The actual message (envelope) to send</param>
+        /// <returns>Promise</returns>
+        Task Send(string destination, Type command, object message);
+
+        /// <summary>
         /// Sends query message to the specified grain
         /// </summary>
         /// <typeparam name="TResult">Type of the result</typeparam>
@@ -31,6 +40,15 @@ namespace Orleans.Bus
         /// <param name="query">Query message to send</param>
         /// <returns>Promise</returns>
         Task<TResult> Query<TResult>(string destination, object query);
+
+        /// <summary>
+        /// Sends query message to the specified grain. This overload supports sending query envelopes.
+        /// </summary>
+        /// <param name="destination">Id of the destination grain</param>
+        /// <param name="query">Type of query message which will be sent</param>
+        /// <param name="message">The actual message (envelope) to send</param>
+        /// <returns>Promise</returns>
+        Task<TResult> Query<TResult>(string destination, Type query, object message);        
     }
 
     /// <summary>
@@ -165,21 +183,40 @@ namespace Orleans.Bus
 
         Task IMessageBus.Send(string destination, object command)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            return ((IMessageBus)this).Send(destination, command.GetType(), command);
+        }
+
+        Task IMessageBus.Send(string destination, Type command, object message)
+        {
             if (string.IsNullOrEmpty(destination))
                 throw new ArgumentException("Destination id is null or empty", "destination");
 
             if (command == null)
                 throw new ArgumentNullException("command");
 
-            var handler = commands.Find(command.GetType());
+            if (message == null)
+                throw new ArgumentNullException("message");
+
+            var handler = commands.Find(command);
             if (handler == null)
-                throw new HandlerNotFoundException(command.GetType());
+                throw new HandlerNotFoundException(command);
 
             var grain = factory.GetReference(handler.Grain, destination);
-            return handler.Handle(grain, command).UnwrapExceptions();
+            return handler.Handle(grain, message).UnwrapExceptions();
         }
 
-        async Task<TResult> IMessageBus.Query<TResult>(string destination, object query)
+        Task<TResult> IMessageBus.Query<TResult>(string destination, object query)
+        {
+            if (query == null)
+                throw new ArgumentNullException("query");
+
+            return ((IMessageBus)this).Query<TResult>(destination, query.GetType(), query);
+        }
+
+        async Task<TResult> IMessageBus.Query<TResult>(string destination, Type query, object message)
         {
             if (string.IsNullOrEmpty(destination))
                 throw new ArgumentException("Destination id is null or empty", "destination");
@@ -187,12 +224,15 @@ namespace Orleans.Bus
             if (query == null)
                 throw new ArgumentNullException("query");
 
-            var handler = queries.Find(query.GetType());
+            if (message == null)
+                throw new ArgumentNullException("message");
+
+            var handler = queries.Find(query);
             if (handler == null)
-                throw new HandlerNotFoundException(query.GetType());
+                throw new HandlerNotFoundException(query);
 
             var reference = factory.GetReference(handler.Grain, destination);
-            return (TResult)(await handler.Handle(reference, query).UnwrapExceptions());
+            return (TResult)(await handler.Handle(reference, message).UnwrapExceptions());
         }
 
         [Serializable]

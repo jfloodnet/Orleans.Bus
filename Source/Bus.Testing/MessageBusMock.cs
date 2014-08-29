@@ -28,25 +28,35 @@ namespace Orleans.Bus
 
         Task IMessageBus.Send(string destination, object command)
         {
-            RecordedCommands.Add(new RecordedCommand(destination, command));
+            return ((IMessageBus)this).Send(destination, command.GetType(), command);
+        }
 
-            var route = routes.Find(x => x.Match(destination, command));
+        Task IMessageBus.Send(string destination, Type command, object message)
+        {
+            RecordedCommands.Add(new RecordedCommand(destination, command, message));
+
+            var route = routes.Find(x => x.Match(destination, message));
             if (route != null)
-                route.Apply(command);
+                route.Apply(message);
 
             return TaskDone.Done;
         }
 
         Task<TResult> IMessageBus.Query<TResult>(string destination, object query)
         {
-            RecordedQueries.Add(new RecordedQuery(destination, query, typeof(TResult)));
-
-            var route = routes.Find(x => x.Match(destination, query));
-            return route == null 
-                    ? Task.FromResult(default(TResult)) 
-                    : Task.FromResult((TResult)route.Apply(query));
+            return ((IMessageBus)this).Query<TResult>(destination, query.GetType(), query);
         }
-   
+
+        public Task<TResult> Query<TResult>(string destination, Type query, object message)
+        {
+            RecordedQueries.Add(new RecordedQuery(destination, query, message, typeof(TResult)));
+
+            var route = routes.Find(x => x.Match(destination, message));
+            return route == null
+                    ? Task.FromResult(default(TResult))
+                    : Task.FromResult((TResult)route.Apply(message));
+        }
+
         class Route
         {
             readonly List<IExpectation> expectations = new List<IExpectation>();
@@ -88,12 +98,14 @@ namespace Orleans.Bus
     public class RecordedCommand
     {
         public readonly string Destination;
-        public readonly object Command;
+        public readonly Type Command;
+        public readonly object Message;
 
-        public RecordedCommand(string destination, object command)
+        public RecordedCommand(string destination, Type command, object message)
         {
             Destination = destination;
             Command = command;
+            Message = message;
         }
     }
 
@@ -118,7 +130,7 @@ namespace Orleans.Bus
 
         public IEnumerable<object> this[string destination]
         {
-            get { return commands.Where(x => x.Destination == destination).Select(x => x.Command); }
+            get { return commands.Where(x => x.Destination == destination).Select(x => x.Message); }
         }
 
         public void Clear()
@@ -130,13 +142,15 @@ namespace Orleans.Bus
     public class RecordedQuery
     {
         public readonly string Destination;
-        public readonly object Query;
+        public readonly Type Query;
+        public readonly object Message;
         public readonly Type Result;
 
-        public RecordedQuery(string destination, object query, Type result)
+        public RecordedQuery(string destination, Type query, object message, Type result)
         {
             Destination = destination;
             Query = query;
+            Message = message;
             Result = result;
         }
     }
@@ -162,7 +176,7 @@ namespace Orleans.Bus
 
         public IEnumerable<object> this[string destination]
         {
-            get { return queries.Where(x => x.Destination == destination).Select(x => x.Query); }
+            get { return queries.Where(x => x.Destination == destination).Select(x => x.Message); }
         }
 
         public void Clear()
