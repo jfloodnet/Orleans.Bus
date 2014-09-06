@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Orleans.Runtime;
 using Orleans.Storage;
 using Orleans.Providers;
 
@@ -97,7 +98,7 @@ namespace Orleans.Bus
             return WriteStateAsync(grainReference.Id(), new GrainType(grainType), Get(grainState));
         }
 
-        Task IStorageProvider.ClearStateAsync(string grainType, GrainReference grainReference, GrainState grainState)
+        Task IStorageProvider.ClearStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
         {
             return ClearStateAsync(grainReference.Id(), new GrainType(grainType), Get(grainState));
         }
@@ -137,7 +138,7 @@ namespace Orleans.Bus
         /// <returns>
         /// Completion promise Task for the inttialization work for this provider
         /// </returns>
-        public abstract Task Init(Dictionary<string, string> properties);
+        public abstract Task Init(IDictionary<string, string> properties);
 
         /// <summary>
         /// Returns grain's state stored in backing store.

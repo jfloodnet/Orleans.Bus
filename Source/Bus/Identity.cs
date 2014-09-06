@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using Orleans.Runtime;
+
 namespace Orleans.Bus
 {
     /// <summary>

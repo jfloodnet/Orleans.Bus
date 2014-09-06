@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using Orleans.Concurrency;
+
 namespace Orleans.Bus
 {
     /// <summary>

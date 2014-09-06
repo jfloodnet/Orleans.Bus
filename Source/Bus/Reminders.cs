@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Orleans.Runtime;
+
 namespace Orleans.Bus
 {
     /// <summary>
@@ -48,7 +50,7 @@ namespace Orleans.Bus
 
     class ReminderCollection : IReminderCollection
     {
-        readonly IDictionary<string, IOrleansReminder> reminders = new Dictionary<string, IOrleansReminder>();
+        readonly IDictionary<string, IGrainReminder> reminders = new Dictionary<string, IGrainReminder>();
         readonly IExposeGrainInternals grain;
 
         public ReminderCollection(IExposeGrainInternals grain)

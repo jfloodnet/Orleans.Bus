@@ -100,7 +100,7 @@ namespace Orleans.Bus
 
     class TimerCollection : ITimerCollection
     {
-        readonly IDictionary<string, IOrleansTimer> timers = new Dictionary<string, IOrleansTimer>();
+        readonly IDictionary<string, IDisposable> timers = new Dictionary<string, IDisposable>();
         readonly IExposeGrainInternals grain;
         readonly Func<string> identity;
         readonly IMessageBus bus;

@@ -41,12 +41,12 @@ namespace Orleans.Bus
             get; set;
         }
 
-        public Dictionary<string, object> AsDictionary()
+        public IDictionary<string, object> AsDictionary()
         {
             throw new NotImplementedException();
         }
 
-        public void SetAll(Dictionary<string, object> values)
+        public void SetAll(IDictionary<string, object> values)
         {
             throw new NotImplementedException();
         }

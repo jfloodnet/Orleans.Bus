@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using Orleans;
 using Orleans.Bus;
+using Orleans.Providers;
+using Orleans.Runtime;
 
 namespace Sample
 {

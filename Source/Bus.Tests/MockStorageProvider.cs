@@ -97,7 +97,7 @@ namespace Orleans.Bus
                 ClearStateGrainType = "";
         }
 
-        public override Task Init(Dictionary<string, string> properties)
+        public override Task Init(IDictionary<string, string> properties)
         {
             DefaultValue = int.Parse(properties["DefaultValue"]);
             ReadStateReturnValue = DefaultValue;

@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using Orleans.Providers;
+
 namespace Orleans.Bus
 {
     [StorageProvider(ProviderName = "TestPersistentGrainStorageProvider")]

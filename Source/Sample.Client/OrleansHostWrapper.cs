@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-using Orleans.Host.SiloHost;
+using Orleans.Host;
 
 namespace Sample
 {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Orleans.Runtime;
+
 namespace Orleans.Bus
 {
     /// <summary>
@@ -14,7 +16,7 @@ namespace Orleans.Bus
     /// <summary>
     /// Base class for all message based grains
     /// </summary>
-    public abstract class MessageBasedGrain : GrainBase, IMessageBasedGrain, IExposeGrainInternals
+    public abstract class MessageBasedGrain : Grain, IMessageBasedGrain, IExposeGrainInternals
     {
         /// <summary>
         /// Reference to <see cref="IMessageBus"/>. Points to global runtime-bound implementation by default.
@@ -110,27 +112,27 @@ namespace Orleans.Bus
             DelayDeactivation(timeSpan);
         }
 
-        Task<IOrleansReminder> IExposeGrainInternals.GetReminder(string reminderName)
+        Task<IGrainReminder> IExposeGrainInternals.GetReminder(string reminderName)
         {
             return GetReminder(reminderName);
         }
 
-        Task<List<IOrleansReminder>> IExposeGrainInternals.GetReminders()
+        Task<List<IGrainReminder>> IExposeGrainInternals.GetReminders()
         {
             return GetReminders();
         }
 
-        Task<IOrleansReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
+        Task<IGrainReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
         {
             return RegisterOrUpdateReminder(reminderName, dueTime, period);
         }
 
-        Task IExposeGrainInternals.UnregisterReminder(IOrleansReminder reminder)
+        Task IExposeGrainInternals.UnregisterReminder(IGrainReminder reminder)
         {
             return UnregisterReminder(reminder);
         }
 
-        IOrleansTimer IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
+        IDisposable IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
         {
             return RegisterTimer(asyncCallback, state, dueTime, period);
         }
@@ -140,7 +142,7 @@ namespace Orleans.Bus
     /// Base class for all persistent message based grains
     /// </summary>
     /// <typeparam name="TState">The type of the state.</typeparam>
-    public abstract class MessageBasedGrainBase<TState> : GrainBase<TState>, IMessageBasedGrain, IExposeGrainInternals 
+    public abstract class MessageBasedGrainBase<TState> : Grain<TState>, IMessageBasedGrain, IExposeGrainInternals 
         where TState : class, IGrainState
     {
         /// <summary>
@@ -249,7 +251,7 @@ namespace Orleans.Bus
         /// </summary>
         /// <param name="reminderName">Name of the reminder.</param>
         /// <returns></returns>
-        Task<IOrleansReminder> IExposeGrainInternals.GetReminder(string reminderName)
+        Task<IGrainReminder> IExposeGrainInternals.GetReminder(string reminderName)
         {
             return GetReminder(reminderName);
         }
@@ -258,7 +260,7 @@ namespace Orleans.Bus
         /// Gets the reminders.
         /// </summary>
         /// <returns></returns>
-        Task<List<IOrleansReminder>> IExposeGrainInternals.GetReminders()
+        Task<List<IGrainReminder>> IExposeGrainInternals.GetReminders()
         {
             return GetReminders();
         }
@@ -270,7 +272,7 @@ namespace Orleans.Bus
         /// <param name="dueTime">The due time.</param>
         /// <param name="period">The period.</param>
         /// <returns></returns>
-        Task<IOrleansReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
+        Task<IGrainReminder> IExposeGrainInternals.RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period)
         {
             return RegisterOrUpdateReminder(reminderName, dueTime, period);
         }
@@ -280,7 +282,7 @@ namespace Orleans.Bus
         /// </summary>
         /// <param name="reminder">The reminder.</param>
         /// <returns></returns>
-        Task IExposeGrainInternals.UnregisterReminder(IOrleansReminder reminder)
+        Task IExposeGrainInternals.UnregisterReminder(IGrainReminder reminder)
         {
             return UnregisterReminder(reminder);
         }
@@ -293,7 +295,7 @@ namespace Orleans.Bus
         /// <param name="dueTime">The due time.</param>
         /// <param name="period">The period.</param>
         /// <returns></returns>
-        IOrleansTimer IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
+        IDisposable IExposeGrainInternals.RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period)
         {
             return RegisterTimer(asyncCallback, state, dueTime, period);
         }
@@ -364,11 +366,11 @@ namespace Orleans.Bus
         void DeactivateOnIdle();
         void DelayDeactivation(TimeSpan timeSpan);
 
-        Task<IOrleansReminder> GetReminder(string reminderName);
-        Task<List<IOrleansReminder>> GetReminders();
-        Task<IOrleansReminder> RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period);
-        Task UnregisterReminder(IOrleansReminder reminder);
+        Task<IGrainReminder> GetReminder(string reminderName);
+        Task<List<IGrainReminder>> GetReminders();
+        Task<IGrainReminder> RegisterOrUpdateReminder(string reminderName, TimeSpan dueTime, TimeSpan period);
+        Task UnregisterReminder(IGrainReminder reminder);
 
-        IOrleansTimer RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period);         
+        IDisposable RegisterTimer(Func<object, Task> asyncCallback, object state, TimeSpan dueTime, TimeSpan period);         
     }
 }

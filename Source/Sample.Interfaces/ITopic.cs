@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 
 using Orleans;
 using Orleans.Bus;
+using Orleans.Concurrency;
 
 namespace Sample
 {

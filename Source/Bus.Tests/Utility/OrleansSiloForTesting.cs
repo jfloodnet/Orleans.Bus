@@ -6,7 +6,8 @@ using System.Net;
 using NUnit.Framework;
 
 using Orleans.Bus;
-using Orleans.Host.SiloHost;
+using Orleans.Host;
+using Orleans.Runtime.Configuration;
 
 [assembly: OrleansSiloForTestingAction]
 

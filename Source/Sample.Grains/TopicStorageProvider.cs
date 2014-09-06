@@ -17,7 +17,7 @@ namespace Sample
     {
         CloudBlobContainer container;
 
-        public override Task Init(Dictionary<string, string> properties)
+        public override Task Init(IDictionary<string, string> properties)
         {
             var account = CloudStorageAccount.Parse(properties["StorageAccountConnectionString"]);
             var blobClient = account.CreateCloudBlobClient();
