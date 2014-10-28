@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Orleans.Bus
 {
-    [TestFixture]
+    [TestFixture, Explicit]
     public class BenchmarkFixture
     {
         IMessageBus bus;

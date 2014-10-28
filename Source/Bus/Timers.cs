@@ -99,17 +99,17 @@ namespace Orleans.Bus
         IEnumerable<string> Registered();
     }
 
-    class TimerCollection : ITimerCollection
+    public class TimerCollection : ITimerCollection
     {
         readonly IDictionary<string, IDisposable> timers = new Dictionary<string, IDisposable>();
         readonly IExposeGrainInternals grain;
-        readonly Func<string> identity;
+        readonly string id;
         readonly IMessageBus bus;
 
-        public TimerCollection(IExposeGrainInternals grain, Func<string> identity, IMessageBus bus)
+        public TimerCollection(IMessageBasedGrain grain, string id, IMessageBus bus)
         {
-            this.grain  = grain;
-            this.identity = identity;
+            this.grain = (IExposeGrainInternals) grain;
+            this.id = id;
             this.bus = bus;
         }
 
@@ -152,7 +152,7 @@ namespace Orleans.Bus
 
         Task CommandTimerCallback<TCommand>(TCommand command)
         {
-            return bus.Send(identity(), command);
+            return bus.Send(id, command);
         }
     }
 }

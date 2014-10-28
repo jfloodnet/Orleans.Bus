@@ -5,7 +5,14 @@ namespace Orleans.Bus
 {
     public class TestCommandTimerGrain : MessageBasedGrain, ITestCommandTimerGrain
     {
+        ITimerCollection timers;
         string text = "NONE";
+
+        public override Task ActivateAsync()
+        {
+            timers = new TimerCollection(this, Identity.Of(this), MessageBus.Instance);
+            return TaskDone.Done;
+        }
 
         public Task HandleCommand(object cmd)
         {
@@ -15,14 +22,14 @@ namespace Orleans.Bus
 
         public void Handle(RegisterTimer cmd)
         {
-            Timers.Register(TimeSpan.Zero, TimeSpan.FromSeconds(0.5), 
+            timers.Register(TimeSpan.Zero, TimeSpan.FromSeconds(0.5), 
                 new SetTextByTimer(cmd.Text)
             );
         }        
         
         public void Handle(UnregisterTimer cmd)
         {
-            Timers.Unregister<SetTextByTimer>();
+            timers.Unregister<SetTextByTimer>();
         }
 
         public void Handle(SetTextByTimer cmd)

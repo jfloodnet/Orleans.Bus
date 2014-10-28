@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 using Orleans;
 using Orleans.Bus;
@@ -34,8 +35,10 @@ namespace Sample
     [Answers(typeof(Search))]
     [Notifies(typeof(AvailabilityChanged))]
     [ExtendedPrimaryKey]
-    public interface IApi : IPocoGrain
-    {}
+    public interface IApi : IObservableMessageBasedGrain
+    {
+        [Handler] Task<object> OnQuery(object query);
+    }
 
     [Serializable]
     public class ApiUnavailableException : ApplicationException

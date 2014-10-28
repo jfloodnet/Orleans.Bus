@@ -60,7 +60,6 @@
     <Compile Include="Notification.cs" />
     <Compile Include="Observable.cs" />
     <Compile Include="ObserverCollection.cs" />
-    <Compile Include="PocoGrain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\AggregateExceptionExtensions.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />

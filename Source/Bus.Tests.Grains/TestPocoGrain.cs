@@ -4,20 +4,24 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    public class TestPocoGrain : PocoGrain, ITestPocoGrain
+    public class TestPocoGrain : ObservableMessageBasedGrain, ITestPocoGrain
     {
         TestPoco poco;
 
-        public TestPocoGrain()
+        public override Task ActivateAsync()
         {
-            OnActivate =()=>
-            {
-                poco = new TestPoco(Id(), Notify);
-                return poco.Activate();
-            };
+            poco = new TestPoco(Identity.Of(this), Notify);
+            return poco.Activate();
+        }
 
-            OnCommand = cmd => poco.Handle((dynamic)cmd);
-            OnQuery = async query => await poco.Answer((dynamic)query);
+        public Task OnCommand(object cmd)
+        {
+            return poco.Handle((dynamic)cmd);
+        }
+
+        public async Task<object> OnQuery(object query)
+        {
+            return await poco.Answer((dynamic) query);
         }
     }
 

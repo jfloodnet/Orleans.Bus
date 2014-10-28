@@ -8,27 +8,31 @@ using Orleans.Runtime;
 
 namespace Sample
 {
-    public class TopicGrain : PocoGrain, ITopic
+    public class TopicGrain : MessageBasedGrain, ITopic
     {
         Topic topic;
 
-        public TopicGrain()
+        public override Task ActivateAsync()
         {
-            OnActivate =()=>
-            {
-                topic = new Topic
-                {
-                    Id = Id(),
-                    Bus = Bus, 
-                    Timers = Timers, 
-                    Reminders = Reminders,
-                    Storage = TopicStorage.Instance
-                };
+            var id = Identity.Of(this);
+            var bus = MessageBus.Instance;
+            var storage = TopicStorage.Instance;
 
-                return topic.Activate();
+            topic = new Topic
+            {
+                Id = id,
+                Bus = bus,
+                Timers = new TimerCollection(this, id, bus),
+                Reminders = new ReminderCollection(this),
+                Storage = storage
             };
 
-            OnCommand = command => topic.Handle((dynamic)command);
+            return topic.Activate();
+        }
+
+        public Task OnCommand(object cmd)
+        {
+            return topic.Handle((dynamic)cmd);
         }
 
         public Task ReceiveReminder(string reminderName, TickStatus status)

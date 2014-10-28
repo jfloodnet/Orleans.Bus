@@ -6,26 +6,29 @@ using Orleans.Bus;
 
 namespace Sample
 {
-    public class ApiGrain : PocoGrain, IApi
+    public class ApiGrain : ObservableMessageBasedGrain, IApi
     {
         Api api;
 
-        public ApiGrain()
+        public override Task ActivateAsync()
         {
-            OnActivate =()=>
-            {
-                api = new Api
-                {
-                    Id      = Id(),
-                    Timers  = Timers,
-                    Notify  = e => Notify(new []{new Notification(e.GetType(), e)}),
-                    Worker  = new DemoWorker(Id()) // ApiWorker.Create(Id())
-                };
+            var id = Identity.Of(this);
+            var bus = MessageBus.Instance;
 
-                return Task.FromResult(api);
+            api = new Api
+            {
+                Id = id,
+                Timers = new TimerCollection(this, id, bus),
+                Notify = e => Notify(new[] { new Notification(e.GetType(), e) }),
+                Worker = new DemoWorker(id) // ApiWorker.Create(Id())
             };
 
-            OnQuery = async query => await api.Answer((dynamic)query);
+            return Task.FromResult(api);
+        }
+
+        public async Task<object> OnQuery(object query)
+        {
+            return await api.Answer((dynamic)query);
         }
     }
 

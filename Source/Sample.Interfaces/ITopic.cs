@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 using Orleans;
 using Orleans.Bus;
@@ -23,6 +24,8 @@ namespace Sample
 
     [Handles(typeof(CreateTopic))]
     [ExtendedPrimaryKey]
-    public interface ITopic : IPocoGrain, IRemindable
-    {}
+    public interface ITopic : IMessageBasedGrain, IRemindable
+    {
+        [Handler] Task OnCommand(object cmd);
+    }
 }

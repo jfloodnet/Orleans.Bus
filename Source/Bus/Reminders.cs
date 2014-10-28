@@ -48,14 +48,14 @@ namespace Orleans.Bus
         Task<IEnumerable<string>> Registered();
     }
 
-    class ReminderCollection : IReminderCollection
+    public class ReminderCollection : IReminderCollection
     {
         readonly IDictionary<string, IGrainReminder> reminders = new Dictionary<string, IGrainReminder>();
         readonly IExposeGrainInternals grain;
 
-        public ReminderCollection(IExposeGrainInternals grain)
+        public ReminderCollection(IMessageBasedGrain grain)
         {
-            this.grain = grain;
+            this.grain = (IExposeGrainInternals) grain;
         }
 
         public async Task Register(string id, TimeSpan due, TimeSpan period)

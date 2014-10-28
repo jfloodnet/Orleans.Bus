@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Orleans.Concurrency;
 
@@ -93,6 +94,9 @@ namespace Orleans.Bus
     [Notifies(typeof(FooPublished))]
     [Notifies(typeof(BarPublished))]
     [ExtendedPrimaryKey]
-    public interface ITestPocoGrain : IPocoGrain
-    {}
+    public interface ITestPocoGrain : IObservableMessageBasedGrain
+    {
+        [Handler] Task OnCommand(object cmd);
+        [Handler] Task<object> OnQuery(object query);
+    }
 }
