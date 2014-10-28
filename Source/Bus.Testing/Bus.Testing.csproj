@@ -49,11 +49,9 @@
     <Compile Include="Expectations.cs" />
     <Compile Include="ExpressionExtensions.cs" />
     <Compile Include="MessageBusMock.cs" />
-    <Compile Include="StateHolderStub.cs" />
     <Compile Include="ObservableProxyMock.cs" />
     <Compile Include="ObserverCollectionMock.cs" />
     <Compile Include="ReminderCollectionMock.cs" />
-    <Compile Include="StateStorageMock.cs" />
     <Compile Include="TimerCollectionMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

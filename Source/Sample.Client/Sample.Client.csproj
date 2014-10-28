@@ -86,7 +86,7 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="OrleansHostWrapper.cs" />
+    <Compile Include="OrleansSilo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

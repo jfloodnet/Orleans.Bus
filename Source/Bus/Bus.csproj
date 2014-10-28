@@ -67,7 +67,6 @@
     <Compile Include="Properties\orleans.codegen.cs" />
     <Compile Include="Reminders.cs" />
     <Compile Include="Timers.cs" />
-    <Compile Include="Persistence.cs" />
   </ItemGroup>
   <PropertyGroup>
     <OrleansProjectType>Client</OrleansProjectType>

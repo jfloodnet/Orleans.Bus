@@ -6,7 +6,7 @@ using Orleans.Bus;
 
 namespace Sample
 {
-    public class ApiGrain : PocoGrain<Api>, IApi
+    public class ApiGrain : PocoGrain, IApi
     {
         Api api;
 

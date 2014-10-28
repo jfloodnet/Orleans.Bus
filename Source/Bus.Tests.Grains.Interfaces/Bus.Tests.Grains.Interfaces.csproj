@@ -48,7 +48,6 @@
   <ItemGroup>
     <Compile Include="ITestCommandTimerGrain.cs" />
     <Compile Include="ITestEnvelopeSupportGrain.cs" />
-    <Compile Include="ITestPersistentGrain.cs" />
     <Compile Include="ITestPocoGrain.cs" />
     <Compile Include="Meta.cs" />
     <Compile Include="Properties\orleans.codegen.cs" />

@@ -2,11 +2,6 @@
 <OrleansConfiguration xmlns="urn:orleans">
   <Globals>
     <ReminderService ReminderServiceType="ReminderTableGrain"/>    
-    <StorageProviders>
-      <Provider Type="Sample.TopicStorageProvider" 
-                Name="TopicStorageProvider"
-                StorageAccountConnectionString="UseDevelopmentStorage=true"/>
-    </StorageProviders>
     <SeedNode Address="localhost" Port="11111" />
   </Globals>
   <Defaults>

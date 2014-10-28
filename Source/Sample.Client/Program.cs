@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Microsoft.WindowsAzure.Storage;
+
 using Orleans;
 using Orleans.Bus;
 
@@ -7,13 +9,18 @@ namespace Sample
 {
     public static class Program
     {
-        private static OrleansHostWrapper hostWrapper;
+        static OrleansSilo silo;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
+            var args = new[]
+            {
+                "UseDevelopmentStorage=true" // # TopicStorageAccount
+            };
+
             var hostDomain = AppDomain.CreateDomain("OrleansHost", null, new AppDomainSetup
             {
-                AppDomainInitializer = InitSilo,
+                AppDomainInitializer = StartSilo,
                 AppDomainInitializerArguments = args,
             });
 
@@ -23,26 +30,20 @@ namespace Sample
             Console.WriteLine("Press Enter to terminate ...");
             Console.ReadLine();
 
-            hostDomain.DoCallBack(ShutdownSilo);
+            hostDomain.DoCallBack(StopSilo);
         }
 
-        static void InitSilo(string[] args)
+        static void StartSilo(string[] args)
         {
-            hostWrapper = new OrleansHostWrapper(args);
+            TopicStorage.Init(CloudStorageAccount.Parse(args[0]));
 
-            if (!hostWrapper.Run())
-                Console.Error.WriteLine("Failed to initialize Orleans silo");
+            silo = new OrleansSilo();
+            silo.Start();
         }
 
-        static void ShutdownSilo()
+        static void StopSilo()
         {
-            if (hostWrapper == null)
-                return;
-
-            hostWrapper.Stop();
-            hostWrapper.Dispose();
-
-            GC.SuppressFinalize(hostWrapper);
+            silo.Stop();
         }
 
         static void RunClient()

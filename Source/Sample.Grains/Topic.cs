@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Orleans;
 using Orleans.Bus;
-using Orleans.Providers;
 using Orleans.Runtime;
 
 namespace Sample
 {
-    [StorageProvider(ProviderName = "TopicStorageProvider")]
-    public class TopicGrain : PocoGrain<TopicState>, ITopic
+    public class TopicGrain : PocoGrain, ITopic
     {
         Topic topic;
 
@@ -21,14 +18,14 @@ namespace Sample
             {
                 topic = new Topic
                 {
+                    Id = Id(),
                     Bus = Bus, 
                     Timers = Timers, 
                     Reminders = Reminders,
-                    State = State,
-                    Storage = Storage
+                    Storage = TopicStorage.Instance
                 };
 
-                return TaskDone.Done;
+                return topic.Activate();
             };
 
             OnCommand = command => topic.Handle((dynamic)command);
@@ -42,10 +39,11 @@ namespace Sample
 
     public class Topic
     {
+        public string Id;
         public IMessageBus Bus;
         public ITimerCollection Timers;
         public IReminderCollection Reminders;
-        public IStateStorage Storage;
+        public ITopicStorage Storage;
         public TopicState State;
 
         const int MaxRetries = 3;
@@ -53,6 +51,11 @@ namespace Sample
         readonly IDictionary<string, int> retrying = new Dictionary<string, int>();
 
         string query;
+
+        public async Task Activate()
+        {
+            State = await Storage.ReadStateAsync(Id);
+        }
 
         public async Task Handle(CreateTopic cmd)
         {
@@ -99,11 +102,11 @@ namespace Sample
             {
                 RecordFailedRetry(api);
 
-               if (MaxRetriesReached(api))
-               {
-                   DisableSearch(api);
-                   CancelRetries(api);                   
-               }
+                if (MaxRetriesReached(api))
+                {
+                    DisableSearch(api);
+                    CancelRetries(api);                   
+                }
             }
         }
 
@@ -123,15 +126,15 @@ namespace Sample
             retrying.Remove(api);
         }
 
-        void DisableSearch(string api)
-        {
-            Reminders.Unregister(api);
-        }
-
         async Task Search(string api)
         {
             State.Total += await Bus.Query<int>(api, new Search(query));
-            await Storage.WriteStateAsync();
+            await Storage.WriteStateAsync(Id, State);
+        }
+
+        void DisableSearch(string api)
+        {
+            Reminders.Unregister(api);
         }
     }
 
