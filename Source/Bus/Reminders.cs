@@ -48,22 +48,29 @@ namespace Orleans.Bus
         Task<IEnumerable<string>> Registered();
     }
 
+    /// <summary>
+    /// Default Orleans bound implementation of <see cref="IReminderCollection"/>
+    /// </summary>
     public class ReminderCollection : IReminderCollection
     {
         readonly IDictionary<string, IGrainReminder> reminders = new Dictionary<string, IGrainReminder>();
         readonly IExposeGrainInternals grain;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReminderCollection"/> class.
+        /// </summary>
+        /// <param name="grain">The grain which requires reminder services.</param>
         public ReminderCollection(IMessageBasedGrain grain)
         {
             this.grain = (IExposeGrainInternals) grain;
         }
 
-        public async Task Register(string id, TimeSpan due, TimeSpan period)
+        async Task IReminderCollection.Register(string id, TimeSpan due, TimeSpan period)
         {
             reminders[id] = await grain.RegisterOrUpdateReminder(id, due, period);
         }
 
-        public async Task Unregister(string id)
+        async Task IReminderCollection.Unregister(string id)
         {
             var reminder = reminders.Find(id) ?? await grain.GetReminder(id);
             
@@ -73,12 +80,12 @@ namespace Orleans.Bus
             reminders.Remove(id);
         }
 
-        public async Task<bool> IsRegistered(string id)
+        async Task<bool> IReminderCollection.IsRegistered(string id)
         {
             return reminders.ContainsKey(id) || (await grain.GetReminder(id)) != null;
         }
 
-        public async Task<IEnumerable<string>> Registered()
+        async Task<IEnumerable<string>> IReminderCollection.Registered()
         {
             return (await grain.GetReminders()).Select(x => x.ReminderName);
         }
