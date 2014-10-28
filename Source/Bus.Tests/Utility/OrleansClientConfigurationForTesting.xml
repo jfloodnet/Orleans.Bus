@@ -9,4 +9,5 @@
   <Tracing DefaultTraceLevel="Warning" TraceToConsole="true" TraceToFile="">
     <TraceLevelOverride LogPrefix="Application" TraceLevel="Info" />
   </Tracing>
+  <Messaging ResponseTimeout="60s"/>
 </ClientConfiguration>

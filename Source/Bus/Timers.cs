@@ -34,7 +34,7 @@ namespace Orleans.Bus
         /// 
         /// <para>
         /// Also if grain is not marked as <see cref="ReentrantAttribute"/>
-        ///             the callback invocation will be synchronized and will be conform to usual turn based execution semantics
+        ///             the callback invocation will be synchronized and will conform to usual turn based execution semantics
         /// 
         /// </para>
         /// 

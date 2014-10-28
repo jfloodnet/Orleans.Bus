@@ -51,6 +51,7 @@
     <Compile Include="TestCommandTimerGrain.cs" />
     <Compile Include="TestEnvelopeSupportGrain.cs" />
     <Compile Include="TestPocoGrain.cs" />
+    <Compile Include="TestBareGrain.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bus.Observables\Bus.Observables.csproj">
