@@ -6,16 +6,23 @@ using Orleans.Concurrency;
 namespace Orleans.Bus
 {
     [Reentrant]
-    public class TestReentrantReaderGrain : ReentrantReaderGrain, ITestReentrantReaderGrain
+    public class TestSingleWriterGrain : MessageBasedGrain, ITestSingleWriterGrain
     {
+        MessageQueue commands;
         int state;
 
-        public override Task OnCommand(object cmd)
+        public override Task ActivateAsync()
         {
-            return this.Handle((dynamic)cmd);
+            commands = new MessageQueue(cmd => this.Handle((dynamic)cmd));
+            return base.ActivateAsync();
         }
 
-        public override async Task<object> OnQuery(object query)
+        public Task OnCommand(object cmd)
+        {
+            return commands.Enqueue(cmd);
+        }
+
+        public async Task<object> OnQuery(object query)
         {
             return await this.Answer((dynamic)query);
         }

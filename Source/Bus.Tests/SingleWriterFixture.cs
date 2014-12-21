@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Orleans.Bus
 {
     [TestFixture]
-    public class ReentrantReaderFixture
+    public class SingleWriterFixture
     {
         IMessageBus bus;
 

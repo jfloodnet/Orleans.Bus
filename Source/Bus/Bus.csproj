@@ -55,6 +55,7 @@
       <Link>Properties\Product.cs</Link>
     </Compile>
     <Compile Include="Activation.cs" />
+    <Compile Include="MessageQueue.cs" />
     <Compile Include="Attributes.cs" />
     <Compile Include="DynamicGrainFactory.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
@@ -68,7 +69,6 @@
     <Compile Include="Extensions\AggregateExceptionExtensions.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Properties\orleans.codegen.cs" />
-    <Compile Include="ReentrantReaderGrain.cs" />
     <Compile Include="Reminders.cs" />
     <Compile Include="Timers.cs" />
   </ItemGroup>
