@@ -5,7 +5,7 @@ using Orleans.Concurrency;
 
 namespace Orleans.Bus
 {
-    public abstract class Command
+    public interface Command
     {}
 
     [Serializable, Immutable]
@@ -21,10 +21,10 @@ namespace Orleans.Bus
         }
     }
 
-    public abstract class Query
+    public interface Query
     {}
 
-    public abstract class Query<TResult> : Query
+    public interface Query<TResult> : Query
     {}
 
     [Serializable, Immutable]
@@ -40,6 +40,6 @@ namespace Orleans.Bus
         }
     }
 
-    public abstract class Event
+    public interface Event
     {}
 }

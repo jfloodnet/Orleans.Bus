@@ -66,10 +66,12 @@
     <Compile Include="PubSubFixture.cs" />
     <Compile Include="CommandTimerFixture.cs" />
     <Compile Include="EnvelopeSupportFixture.cs" />
+    <Compile Include="ReentrantReaderFixture.cs" />
     <Compile Include="RequestResponseFixture.cs" />
     <Compile Include="Utility\OrleansSiloForTesting.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="Packages.config" />
   </ItemGroup>
   <ItemGroup>
