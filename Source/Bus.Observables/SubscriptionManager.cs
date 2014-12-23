@@ -62,7 +62,7 @@ namespace Orleans.Bus
             }
 
             var reference = factory.GetReference(notifier, source);
-            var observable = (IObservableGrain)reference;
+            var observable = (IMessageBasedGrain)reference;
 
             await observable.Attach(proxy, notifications);
         }
@@ -84,7 +84,7 @@ namespace Orleans.Bus
             }
 
             var reference = factory.GetReference(notifier, source);
-            var observable = (IObservableGrain)reference;
+            var observable = (IMessageBasedGrain)reference;
 
             await observable.Detach(proxy, notifications);
         }

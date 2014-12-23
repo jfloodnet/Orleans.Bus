@@ -35,7 +35,7 @@ namespace Sample
     [Answers(typeof(Search))]
     [Notifies(typeof(AvailabilityChanged))]
     [ExtendedPrimaryKey]
-    public interface IApi : IObservableMessageBasedGrain
+    public interface IApi : IMessageBasedGrain
     {
         [Handler] Task<object> OnQuery(object query);
     }

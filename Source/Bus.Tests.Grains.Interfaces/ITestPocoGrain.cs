@@ -94,7 +94,7 @@ namespace Orleans.Bus
     [Notifies(typeof(FooPublished))]
     [Notifies(typeof(BarPublished))]
     [ExtendedPrimaryKey]
-    public interface ITestPocoGrain : IObservableMessageBasedGrain
+    public interface ITestPocoGrain : IMessageBasedGrain
     {
         [Handler] Task OnCommand(object cmd);
         [Handler] Task<object> OnQuery(object query);

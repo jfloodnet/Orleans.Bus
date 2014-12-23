@@ -6,7 +6,7 @@ using Orleans.Bus;
 
 namespace Sample
 {
-    public class ApiGrain : ObservableMessageBasedGrain, IApi
+    public class ApiGrain : MessageBasedGrain, IApi
     {
         Api api;
 

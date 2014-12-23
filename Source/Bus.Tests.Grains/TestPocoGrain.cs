@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    public class TestPocoGrain : ObservableMessageBasedGrain, ITestPocoGrain
+    public class TestPocoGrain : MessageBasedGrain, ITestPocoGrain
     {
         TestPoco poco;
 
