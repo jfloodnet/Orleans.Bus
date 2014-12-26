@@ -17,14 +17,16 @@ namespace Sample
 
         public async void Run()
         {
-            foreach (var i in Enumerable.Range(1, 10))
+            var rand = new Random();
+
+            foreach (var i in Enumerable.Range(1, 2000))
             {
                 var topic = i.ToString();
 
                 await bus.Send(topic, new CreateTopic("[" + i + "]", new Dictionary<string, TimeSpan>
                 {
-                    {"facebook", TimeSpan.FromMinutes(2)},
-                    {"twitter", TimeSpan.FromMinutes(1)},
+                    {"facebook", TimeSpan.FromMinutes(rand.Next(1, 3))},
+                    {"twitter", TimeSpan.FromMinutes(rand.Next(1, 2))},
                 }));
             }
         }
