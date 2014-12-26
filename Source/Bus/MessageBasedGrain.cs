@@ -25,6 +25,17 @@ namespace Orleans.Bus
         /// <param name="observer">The observer proxy</param>
         /// <param name="notifications">The types of notification messages</param>
         Task Detach(IObserve observer, params Type[] notifications);
+
+        /// <summary>
+        /// Receives local timer in non-reentrant mode.
+        /// </summary>
+        /// <param name="id">The id of the previously registered timer</param>
+        /// <param name="state">The state of the timer</param>
+        /// <remarks>
+        /// The type representing the <paramref name="state"/> should be either primitive type or 
+        /// it shoud marked with <see cref="SerializableAttribute"/> and be defined within grain interface assembly
+        /// </remarks>
+        Task OnTimer(string id, object state);
     }
 
     /// <summary>
@@ -64,6 +75,20 @@ namespace Orleans.Bus
         Task IMessageBasedGrain.Detach(IObserve observer, params Type[] notifications)
         {
             return OnDetach(observer, notifications);
+        }
+
+        /// <summary>
+        /// Receives local timer in non-reentrant mode.
+        /// </summary>
+        /// <param name="id">The id of the previously registered timer</param>
+        /// <param name="state">The state of the timer</param>
+        /// <remarks>
+        /// The type representing the <paramref name="state"/> should be either primitive type or 
+        /// it shoud marked with <see cref="SerializableAttribute"/> and be defined within grain interface assembly
+        /// </remarks>
+        public virtual Task OnTimer(string id, object state)
+        {
+            throw new NotImplementedException("Override this method in subclass to handle timer callbacks in non-reentrant way");
         }
 
         /// <summary>
