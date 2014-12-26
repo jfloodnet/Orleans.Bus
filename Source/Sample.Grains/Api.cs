@@ -34,7 +34,7 @@ namespace Sample
 
     public class Api
     {
-        const int FailureThreshold = 3;
+        const int FailureThreshold = 1;
 
         public string Id;
         public ITimerCollection Timers;

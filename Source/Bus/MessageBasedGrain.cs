@@ -10,7 +10,7 @@ namespace Orleans.Bus
     /// <summary>
     /// Base interface for all message-based grains
     /// </summary>
-    public interface IMessageBasedGrain : IGrain
+    public interface IMessageBasedGrain : IRemindable
     {
         /// <summary>
         /// Internal. .Attaches given selective generic observer for the given types of notification messages.
@@ -98,6 +98,34 @@ namespace Orleans.Bus
         protected void Notify(params Notification[] notifications)
         {
             observers.Notify(id(), notifications);
+        }
+
+        Task IRemindable.ReceiveReminder(string id, TickStatus status)
+        {
+            return OnReminder(id, status);
+        }
+
+        /// <summary>
+        /// Receieves a reminder callback.
+        /// </summary>
+        /// <param name="id">Id of the reminder</param>
+        /// <param name="status">Status of this reminder tick</param>
+        /// <returns> Completion promise which the grain will resolve when it has finished processing this reminder callback </returns>
+        /// <remarks>Override this method in subclass in order to react to previously registered reminder</remarks>
+        public virtual Task OnReminder(string id, TickStatus status)
+        {
+            return OnReminder(id);
+        }
+
+        /// <summary>
+        /// Receieves a reminder callback.
+        /// </summary>
+        /// <param name="id">Id of the reminder</param>
+        /// <returns> Completion promise which the grain will resolve when it has finished processing this reminder callback </returns>
+        /// <remarks>Override this method in subclass in order to react to previously registered reminder</remarks>
+        public virtual Task OnReminder(string id)
+        {
+            return TaskDone.Done;
         }
 
         #region IExposeGrainInternals

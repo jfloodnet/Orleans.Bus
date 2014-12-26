@@ -58,7 +58,7 @@ namespace Sample
         {
             requests++;
 
-            if (requests % 10 == 0)
+            if (requests % 3 == 0)
                 throw new ApiUnavailableException(api);
 
             return Task.FromResult(random.Next(0, 100));
