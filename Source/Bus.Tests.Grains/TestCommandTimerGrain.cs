@@ -10,7 +10,7 @@ namespace Orleans.Bus
 
         public override Task ActivateAsync()
         {
-            timers = new TimerCollection(this, MessageBus.Instance);
+            timers = new TimerCollection(this);
             return TaskDone.Done;
         }
 

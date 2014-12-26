@@ -12,15 +12,12 @@ namespace Sample
 
         public override Task ActivateAsync()
         {
-            var id = Identity.Of(this);
-            var bus = MessageBus.Instance;
-
             api = new Api
             {
-                Id = id,
-                Timers = new TimerCollection(this, bus),
-                Notify = e => Notify(new[] { new Notification(e.GetType(), e) }),
-                Worker = new DemoWorker(id) // ApiWorker.Create(Id())
+                Id = Identity.Of(this),
+                Timers = new TimerCollection(this),
+                Notify = e => Notify(new[]{new Notification(e.GetType(), e)}),
+                Worker = new DemoWorker(Identity.Of(this))  // ApiWorker.Create(Id())
             };
 
             return Task.FromResult(api);

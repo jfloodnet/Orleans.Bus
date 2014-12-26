@@ -14,17 +14,13 @@ namespace Sample
 
         public override Task ActivateAsync()
         {
-            var id = Identity.Of(this);
-            var bus = MessageBus.Instance;
-            var storage = TopicStorage.Instance;
-
             topic = new Topic
             {
-                Id = id,
-                Bus = bus,
-                Timers = new TimerCollection(this, bus),
+                Id = Identity.Of(this),
+                Bus = MessageBus.Instance,
+                Timers = new TimerCollection(this),
                 Reminders = new ReminderCollection(this),
-                Storage = storage
+                Storage = TopicStorage.Instance
             };
 
             return topic.Activate();

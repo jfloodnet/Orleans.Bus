@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Orleans.Bus
 {
@@ -26,8 +27,14 @@ namespace Orleans.Bus
             foreach (var factory in factories)
             {
                 var grain = factory.GetMethod("Cast").ReturnType;
-                if (IsMessageBasedGrain(grain) && grain.HasAttribute<ExtendedPrimaryKeyAttribute>())
-                    grains[grain] = Bind(factory);
+
+                if (!typeof(IMessageBasedGrain).IsAssignableFrom(grain))
+                    continue;
+
+                if (!grain.HasAttribute<ExtendedPrimaryKeyAttribute>())
+                    throw new MissingExtendedPrimaryKeyAttributeException(grain);
+
+                grains[grain] = Bind(factory);
             }
 
             return this;
@@ -64,11 +71,6 @@ namespace Orleans.Bus
                    && type.Name.EndsWith("Factory");
         }
 
-        static bool IsMessageBasedGrain(Type arg)
-        {
-            return typeof(IMessageBasedGrain).IsAssignableFrom(arg);
-        }
-
         static  Func<string, object> Bind(IReflect factory)
         {
             var method = factory.GetMethod("GetGrain", 
@@ -93,5 +95,19 @@ namespace Orleans.Bus
         {
             return grains.Keys;
         }
+
+        [Serializable]
+        internal class MissingExtendedPrimaryKeyAttributeException : ApplicationException
+        {
+            const string description = "The grain interface '{0}' implements IMessageBasedGrain but is missing [ExtendedPrimaryKey] attribute";
+
+            public MissingExtendedPrimaryKeyAttributeException(Type grain)
+                : base(string.Format(description, grain))
+            {}
+
+            protected MissingExtendedPrimaryKeyAttributeException(SerializationInfo info, StreamingContext context)
+                : base(info, context)
+            {}
+        }        
     }
 }

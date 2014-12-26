@@ -106,17 +106,14 @@ namespace Orleans.Bus
     {
         readonly IDictionary<string, IDisposable> timers = new Dictionary<string, IDisposable>();
         readonly MessageBasedGrain grain;
-        readonly IMessageBus bus;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimerCollection"/> class.
         /// </summary>
         /// <param name="grain">The grain which requires timer services.</param>
-        /// <param name="bus">The bus instance (required for message based timers to work}.</param>
-        public TimerCollection(MessageBasedGrain grain, IMessageBus bus)
+        public TimerCollection(MessageBasedGrain grain)
         {
             this.grain = grain;
-            this.bus = bus;
         }
 
         void ITimerCollection.Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
@@ -173,7 +170,7 @@ namespace Orleans.Bus
 
         Task CommandTimerCallback<TCommand>(TCommand command)
         {
-            return bus.Send(Identity.Of(grain), command);
+            return TaskDone.Done;
         }
     }
 }
