@@ -26,7 +26,7 @@ namespace Orleans.Bus
             foreach (var factory in factories)
             {
                 var grain = factory.GetMethod("Cast").ReturnType;
-                if (grain.HasAttribute<ExtendedPrimaryKeyAttribute>())
+                if (IsMessageBasedGrain(grain) && grain.HasAttribute<ExtendedPrimaryKeyAttribute>())
                     grains[grain] = Bind(factory);
             }
 
@@ -62,6 +62,11 @@ namespace Orleans.Bus
                        .Cast<GeneratedCodeAttribute>()
                        .Any(x => x.Tool == "Orleans-CodeGenerator")
                    && type.Name.EndsWith("Factory");
+        }
+
+        static bool IsMessageBasedGrain(Type arg)
+        {
+            return typeof(IMessageBasedGrain).IsAssignableFrom(arg);
         }
 
         static  Func<string, object> Bind(IReflect factory)
