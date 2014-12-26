@@ -46,7 +46,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ITestCommandTimerGrain.cs" />
+    <Compile Include="ITestNonReentrantTimerGrain.cs" />
     <Compile Include="ITestEnvelopeSupportGrain.cs" />
     <Compile Include="ITestBareGrain.cs" />
     <Compile Include="ITestSingleWriterGrain.cs" />

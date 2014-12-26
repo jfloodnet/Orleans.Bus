@@ -64,7 +64,7 @@
     <Compile Include="BenchmarkFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PubSubFixture.cs" />
-    <Compile Include="CommandTimerFixture.cs" />
+    <Compile Include="NonReentrantTimerFixture.cs" />
     <Compile Include="EnvelopeSupportFixture.cs" />
     <Compile Include="SingleWriterFixture.cs" />
     <Compile Include="RequestResponseFixture.cs" />

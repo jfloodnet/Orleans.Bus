@@ -10,29 +10,24 @@ namespace Orleans.Bus
     {
         readonly List<RecordedTimer> recorded = new List<RecordedTimer>();
 
-        void ITimerCollection.Register(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
+        void ITimerCollection.RegisterReentrant(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
-            recorded.Add(new RecordedCallbackTimer(id, callback, due, period));
+            recorded.Add(new RecordedReentrantTimer(id, due, period, callback));
         }
 
-        void ITimerCollection.Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
+        void ITimerCollection.RegisterReentrant<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
-            recorded.Add(new RecordedCallbackTimer<TState>(id, callback, state, due, period));
+            recorded.Add(new RecordedReentrantTimer<TState>(id, due, period, state, callback));
         }
 
-        public void Register<TCommand>(TimeSpan due, TimeSpan period, TCommand command)
+        public void Register(string id, TimeSpan due, TimeSpan period, object state)
         {
-            recorded.Add(new RecordedCommandTimer(command, due, period));
+            recorded.Add(new RecordedNonReentrantTimer(id, due, period, state));
         }
 
         void ITimerCollection.Unregister(string id)
         {
             recorded.RemoveAll(x => x.Id == id);
-        }
-
-        public void Unregister<TCommand>()
-        {
-            ((ITimerCollection)this).Unregister(typeof(TCommand).FullName);
         }
 
         bool ITimerCollection.IsRegistered(string id)
@@ -85,23 +80,23 @@ namespace Orleans.Bus
         }
     }
     
-    public class RecordedCallbackTimer: RecordedTimer
+    public class RecordedReentrantTimer: RecordedTimer
     {
         public readonly Func<Task> Callback;
 
-        public RecordedCallbackTimer(string id, Func<Task> callback, TimeSpan due, TimeSpan period)
+        public RecordedReentrantTimer(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
             : base(id, due, period)
         {
             Callback = callback;
         }
     }
 
-    public class RecordedCallbackTimer<TState> : RecordedTimer
+    public class RecordedReentrantTimer<TState> : RecordedTimer
     {
         public readonly Func<TState, Task> Callback;
         public readonly TState State;
 
-        public RecordedCallbackTimer(string id, Func<TState, Task> callback, TState state, TimeSpan due, TimeSpan period)
+        public RecordedReentrantTimer(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
             : base(id, due, period)
         {
             Callback = callback;
@@ -109,14 +104,14 @@ namespace Orleans.Bus
         }
     }
 
-    public class RecordedCommandTimer : RecordedTimer
+    public class RecordedNonReentrantTimer : RecordedTimer
     {
-        public readonly object Command;
+        public readonly object State;
 
-        public RecordedCommandTimer(object command, TimeSpan due, TimeSpan period)
-            : base(command.GetType().FullName, due, period)
+        public RecordedNonReentrantTimer(string id, TimeSpan due, TimeSpan period, object state)
+            : base(id, due, period)
         {
-            Command = command;
+            State = state;
         }
     }
 }

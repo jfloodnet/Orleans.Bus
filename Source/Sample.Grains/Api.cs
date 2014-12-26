@@ -96,7 +96,7 @@ namespace Sample
             var due = TimeSpan.FromSeconds(1);
             var period = TimeSpan.FromSeconds(2);
 
-            Timers.Register("check", due, period, CheckAvailability);
+            Timers.RegisterReentrant("check", due, period, CheckAvailability);
         }
 
         public async Task CheckAvailability()

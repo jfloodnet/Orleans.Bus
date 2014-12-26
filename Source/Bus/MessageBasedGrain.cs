@@ -27,7 +27,7 @@ namespace Orleans.Bus
         Task Detach(IObserve observer, params Type[] notifications);
 
         /// <summary>
-        /// Receives local timer in non-reentrant mode.
+        /// Receives local timer in non-reentrant way.
         /// </summary>
         /// <param name="id">The id of the previously registered timer</param>
         /// <param name="state">The state of the timer</param>

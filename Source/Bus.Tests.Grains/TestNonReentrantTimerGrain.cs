@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Orleans.Bus
 {
-    public class TestCommandTimerGrain : MessageBasedGrain, ITestCommandTimerGrain
+    public class TestNonReentrantTimerGrain : MessageBasedGrain, ITestNonReentrantTimerGrain
     {
         ITimerCollection timers;
         string text = "NONE";
@@ -11,6 +11,12 @@ namespace Orleans.Bus
         public override Task ActivateAsync()
         {
             timers = new TimerCollection(this);
+            return TaskDone.Done;
+        }
+
+        public override Task OnTimer(string id, object state)
+        {
+            text = (string) state;
             return TaskDone.Done;
         }
 
@@ -22,19 +28,12 @@ namespace Orleans.Bus
 
         public void Handle(RegisterTimer cmd)
         {
-            timers.Register(TimeSpan.Zero, TimeSpan.FromSeconds(0.5), 
-                new SetTextByTimer(cmd.Text)
-            );
+            timers.Register("change-text", TimeSpan.Zero, TimeSpan.FromSeconds(0.5), cmd.Text);
         }        
         
         public void Handle(UnregisterTimer cmd)
         {
-            timers.Unregister<SetTextByTimer>();
-        }
-
-        public void Handle(SetTextByTimer cmd)
-        {
-            text = cmd.Text;
+            timers.Unregister("change-text");
         }
 
         public Task<object> AnswerQuery(object query)

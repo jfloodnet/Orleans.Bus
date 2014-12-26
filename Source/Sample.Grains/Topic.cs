@@ -86,7 +86,7 @@ namespace Sample
         public void ScheduleRetries(string api)
         {
             retrying.Add(api, 0);
-            Timers.Register(api, RetryPeriod, RetryPeriod, api, RetrySearch);
+            Timers.RegisterReentrant(api, RetryPeriod, RetryPeriod, api, RetrySearch);
         }
 
         public async Task RetrySearch(object state)

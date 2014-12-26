@@ -100,7 +100,10 @@ namespace Orleans.Bus
                 .Select(x => x.Notification)
                 .ToArray();
 
-            await SubscriptionManager.Instance.Subscribe(source, proxy, notifications);
+            await SubscriptionManager
+                    .Instance
+                    .Subscribe(source, proxy, notifications)
+                    .UnwrapExceptions();
         }
 
         async Task IObservableProxy.Detach(string source, params Type[] notifications)
@@ -108,7 +111,10 @@ namespace Orleans.Bus
             foreach (var notification in notifications)
                 handlers.Remove(notification);
 
-            await SubscriptionManager.Instance.Unsubscribe(source, proxy, notifications);
+            await SubscriptionManager
+                    .Instance
+                    .Unsubscribe(source, proxy, notifications)
+                    .UnwrapExceptions();
         }
 
         void IObserve.On(string source, params Notification[] notifications)
