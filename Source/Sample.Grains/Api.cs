@@ -18,7 +18,7 @@ namespace Sample
             api = new Api
             {
                 Id = id,
-                Timers = new TimerCollection(this, id, bus),
+                Timers = new TimerCollection(this, bus),
                 Notify = e => Notify(new[] { new Notification(e.GetType(), e) }),
                 Worker = new DemoWorker(id) // ApiWorker.Create(Id())
             };

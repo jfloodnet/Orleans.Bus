@@ -22,7 +22,7 @@ namespace Sample
             {
                 Id = id,
                 Bus = bus,
-                Timers = new TimerCollection(this, id, bus),
+                Timers = new TimerCollection(this, bus),
                 Reminders = new ReminderCollection(this),
                 Storage = storage
             };

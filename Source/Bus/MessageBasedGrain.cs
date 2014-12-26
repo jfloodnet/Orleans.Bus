@@ -32,7 +32,6 @@ namespace Orleans.Bus
     /// </summary>
     public abstract class MessageBasedGrain : Grain, IMessageBasedGrain, IExposeGrainInternals
     {
-        readonly Func<string> id;
         readonly IObserverCollection observers;
 
         /// <summary>
@@ -40,17 +39,7 @@ namespace Orleans.Bus
         /// </summary>
         protected MessageBasedGrain()
         {
-            id =()=> Identity.Of(this);
             observers = new ObserverCollection();
-        }
-
-        /// <summary>
-        /// Constructor, which allows injection for unit-testing purposes.
-        /// </summary>
-        protected MessageBasedGrain(Func<string> id, IObserverCollection observers)
-        {
-            this.id = id;
-            this.observers = observers;
         }
 
         Task IMessageBasedGrain.Attach(IObserve observer, params Type[] notifications)
@@ -97,7 +86,7 @@ namespace Orleans.Bus
         /// <param name="notifications">The notification messages</param>
         protected void Notify(params Notification[] notifications)
         {
-            observers.Notify(id(), notifications);
+            observers.Notify(Identity.Of(this), notifications);
         }
 
         Task IRemindable.ReceiveReminder(string id, TickStatus status)

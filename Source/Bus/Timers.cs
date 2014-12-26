@@ -105,20 +105,17 @@ namespace Orleans.Bus
     public class TimerCollection : ITimerCollection
     {
         readonly IDictionary<string, IDisposable> timers = new Dictionary<string, IDisposable>();
-        readonly IExposeGrainInternals grain;
-        readonly string id;
+        readonly MessageBasedGrain grain;
         readonly IMessageBus bus;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimerCollection"/> class.
         /// </summary>
         /// <param name="grain">The grain which requires timer services.</param>
-        /// <param name="id">The id of the grain.</param>
         /// <param name="bus">The bus instance (required for message based timers to work}.</param>
-        public TimerCollection(IMessageBasedGrain grain, string id, IMessageBus bus)
+        public TimerCollection(MessageBasedGrain grain, IMessageBus bus)
         {
-            this.grain = (IExposeGrainInternals) grain;
-            this.id = id;
+            this.grain = grain;
             this.bus = bus;
         }
 
@@ -129,7 +126,7 @@ namespace Orleans.Bus
 
         void DoRegister(string id, TimeSpan due, TimeSpan period, Func<Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(s => callback(), null, due, period));
+            timers.Add(id, ((IExposeGrainInternals)grain).RegisterTimer(s => callback(), null, due, period));
         }
 
         void ITimerCollection.Register<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
@@ -139,7 +136,7 @@ namespace Orleans.Bus
 
         void DoRegister<TState>(string id, TimeSpan due, TimeSpan period, TState state, Func<TState, Task> callback)
         {
-            timers.Add(id, grain.RegisterTimer(s => callback((TState) s), state, due, period));
+            timers.Add(id, ((IExposeGrainInternals)grain).RegisterTimer(s => callback((TState)s), state, due, period));
         }
 
         void ITimerCollection.Register<TCommand>(TimeSpan due, TimeSpan period, TCommand command)
@@ -176,7 +173,7 @@ namespace Orleans.Bus
 
         Task CommandTimerCallback<TCommand>(TCommand command)
         {
-            return bus.Send(id, command);
+            return bus.Send(Identity.Of(grain), command);
         }
     }
 }
