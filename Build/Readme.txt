@@ -28,7 +28,7 @@
    You can put any common application-specific logic there, for example:
    	- You can futher constrain types of messages with you own message interfaces
    	- You can implement automatic envelope wrapping/unwrapping
-   	- You can implement support for dependency injection, using you favorite DI framewoek
+   	- You can implement support for dependency injection, using you favorite DI framework
    	- You can implement support for automatic persistence (via automatic state checking)
    	- Etc
 
